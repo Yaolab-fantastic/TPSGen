@@ -94,6 +94,13 @@ tpsgen run \
   --output outputs/demo
 ```
 
+This default command uses the checkpoint-free package-native route. It is the
+recommended reproducibility path for ordinary users. To use a bundled model,
+select it explicitly, for example `--scoring-backend transvae` for four-tissue
+checkpoint scoring or `--motif-backend dnabert` for fresh DNABERT evidence.
+These options require the model dependencies and have route-specific output
+definitions recorded in `manifest.json`.
+
 For a masked template and a compatible preGAN generator checkpoint, use the same
 `run` entry point with an explicit design backend. This is an explicit model-backed
 route and is not the default package-native workflow:

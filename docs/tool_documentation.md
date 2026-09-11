@@ -143,7 +143,7 @@ TransVAE checkpoint outputs.
 
 `reports/workflow_summary.csv` provides one row per input promoter with its
 original preferred tissue, original target score, best candidate rank, target
-score, mutation count and QC status. The validated input FASTA is copied to
+score, target-bias margin, mutation count and QC status. The validated input FASTA is copied to
 `input/validated_promoters.fasta` so that each result directory is self-contained.
 
 The top-level `manifest.json` is the machine-readable provenance record for the
@@ -267,6 +267,9 @@ Main fields:
 | `score_leaf` | Leaf-associated heuristic score |
 | `score_fruit` | Fruit-associated heuristic score |
 | `preferred_tissue` | Tissue with the highest score |
+| `target_tissue` | Tissue selected for candidate prioritization |
+| `target_bias_margin` | Target score minus the highest score among the other three tissues |
+| `tau` | Four-score concentration index; descriptive computational statistic, not an expression measurement |
 | `backend` | Scoring implementation |
 | `score_type` | Score definition and scale |
 
@@ -292,6 +295,8 @@ Main fields:
 | `original_sequence` | Input promoter sequence |
 | `designed_sequence` | Generated candidate sequence |
 | `score_root`, `score_stem`, `score_leaf`, `score_fruit` | Candidate tissue-associated scores |
+| `target_bias_margin` | Candidate target score minus the strongest non-target score |
+| `tau` | Four-score concentration index for the candidate profile |
 | `preserved_motifs` | Motifs protected during package-native design |
 | `num_mutations` | Number of point differences from the original sequence |
 | `passes_qc` | Quality-control flag when available |
