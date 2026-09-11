@@ -12,8 +12,8 @@ tpsgen predict-transvae
 
 | File | Purpose |
 | --- | --- |
-| `src/tomato_promoter_designer/legacy/transvae_tomato.py` | TransVAE model architecture and scoring adapter |
-| `src/tomato_promoter_designer/training/transvae.py` | Training dataset, config loader and training loop |
+| `src/tpsgen/legacy/transvae_tomato.py` | TransVAE model architecture and scoring adapter |
+| `src/tpsgen/training/transvae.py` | Training dataset, config loader and training loop |
 | `scripts/train_transvae.py` | Command-line training wrapper |
 | `configs/training_transvae.yaml` | Default training configuration |
 | `data/raw/transvae/training_set.csv` | Repository training table used by the default config |

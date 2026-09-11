@@ -1,8 +1,8 @@
 import unittest
 from pathlib import Path
 
-from tomato_promoter_designer.io.schema import SequenceRecord
-from tomato_promoter_designer.legacy.pregan_expression import (
+from tpsgen.io.schema import SequenceRecord
+from tpsgen.legacy.pregan_expression import (
     DEFAULT_DEEPSEED_CHECKPOINT,
     PreganExpressionConstraintScorer,
     encode_sequence,

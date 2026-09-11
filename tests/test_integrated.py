@@ -3,8 +3,8 @@ import unittest
 import csv
 from pathlib import Path
 
-from tomato_promoter_designer.io.fasta import read_fasta
-from tomato_promoter_designer.pipeline.integrated import run_integrated_workflow
+from tpsgen.io.fasta import read_fasta
+from tpsgen.pipeline.integrated import run_integrated_workflow
 
 
 class TestIntegratedWorkflow(unittest.TestCase):

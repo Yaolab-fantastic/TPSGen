@@ -2,10 +2,10 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from tomato_promoter_designer.io.schema import SequenceRecord, validate_records
-from tomato_promoter_designer.io.fasta import read_fasta
-from tomato_promoter_designer.preprocessing.kmer_encode import seq_to_kmers
-from tomato_promoter_designer.preprocessing.extract_promoters import extract_gene_promoters, upstream_window
+from tpsgen.io.schema import SequenceRecord, validate_records
+from tpsgen.io.fasta import read_fasta
+from tpsgen.preprocessing.kmer_encode import seq_to_kmers
+from tpsgen.preprocessing.extract_promoters import extract_gene_promoters, upstream_window
 
 
 class TestIOAndSchema(unittest.TestCase):

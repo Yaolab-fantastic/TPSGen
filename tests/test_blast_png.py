@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tomato_promoter_designer.visualization.blast_png import render_legacy_blast_figure_pair
+from tpsgen.visualization.blast_png import render_legacy_blast_figure_pair
 
 
 class TestBlastPng(unittest.TestCase):

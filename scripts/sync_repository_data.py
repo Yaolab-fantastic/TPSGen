@@ -13,16 +13,16 @@ SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from tomato_promoter_designer.io.csv import write_dict_rows
-from tomato_promoter_designer.io.fasta import read_fasta
-from tomato_promoter_designer.pipeline.annotate import run_annotation
-from tomato_promoter_designer.pipeline.annotate_legacy_dnabert import run_legacy_dnabert_motif_annotation
-from tomato_promoter_designer.pipeline.design import run_design
-from tomato_promoter_designer.pipeline.figures import run_figure_export
-from tomato_promoter_designer.pipeline.legacy_figures import run_legacy_figure_export
-from tomato_promoter_designer.pipeline.predict import run_prediction
-from tomato_promoter_designer.pipeline.report import build_report
-from tomato_promoter_designer.visualization.blast_png import render_legacy_blast_figure_pair
+from tpsgen.io.csv import write_dict_rows
+from tpsgen.io.fasta import read_fasta
+from tpsgen.pipeline.annotate import run_annotation
+from tpsgen.pipeline.annotate_legacy_dnabert import run_legacy_dnabert_motif_annotation
+from tpsgen.pipeline.design import run_design
+from tpsgen.pipeline.figures import run_figure_export
+from tpsgen.pipeline.legacy_figures import run_legacy_figure_export
+from tpsgen.pipeline.predict import run_prediction
+from tpsgen.pipeline.report import build_report
+from tpsgen.visualization.blast_png import render_legacy_blast_figure_pair
 
 
 RAW_FILE_SPECS = [

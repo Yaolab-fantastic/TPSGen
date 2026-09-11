@@ -12,7 +12,7 @@ This repository is meant to evolve from a research aggregation workspace into a 
 
 ## Working principles
 
-- keep the installable package under `src/tomato_promoter_designer/`
+- keep the installable package under `src/tpsgen/`
 - prefer small, reviewable pull requests
 - avoid committing raw large datasets or opaque binary artifacts without documentation
 - update `models/weights_manifest.json` whenever model files or checkpoint locations change

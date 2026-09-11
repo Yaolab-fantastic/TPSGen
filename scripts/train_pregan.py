@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 
-from tomato_promoter_designer.legacy.pregan_expression import PreganExpressionConstraintScorer
-from tomato_promoter_designer.training.pregan import PreGANSmokeConfig, run_pregan_smoke_training
+from tpsgen.legacy.pregan_expression import PreganExpressionConstraintScorer
+from tpsgen.training.pregan import PreGANSmokeConfig, run_pregan_smoke_training
 
 
 def main() -> None:

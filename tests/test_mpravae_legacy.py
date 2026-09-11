@@ -1,8 +1,8 @@
 import unittest
 from pathlib import Path
 
-from tomato_promoter_designer.io.schema import SequenceRecord
-from tomato_promoter_designer.legacy.transvae_tomato import (
+from tpsgen.io.schema import SequenceRecord
+from tpsgen.legacy.transvae_tomato import (
     DEFAULT_TRANSVAE_CHECKPOINT,
     TransVAETomatoAdapter,
     decode_one_hot,

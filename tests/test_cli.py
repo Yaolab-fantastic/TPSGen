@@ -15,7 +15,7 @@ class TestCLI(unittest.TestCase):
         env = os.environ.copy()
         env["PYTHONPATH"] = str(repo_root / "src")
         result = subprocess.run(
-            [sys.executable, "-m", "tomato_promoter_designer.cli", "validate-models"],
+            [sys.executable, "-m", "tpsgen.cli", "validate-models"],
             capture_output=True,
             text=True,
             env=env,
@@ -34,7 +34,7 @@ class TestCLI(unittest.TestCase):
             cmd = [
                 sys.executable,
                 "-m",
-                "tomato_promoter_designer.cli",
+                "tpsgen.cli",
                 "copy-example",
                 "--output",
                 str(output_path),
@@ -53,7 +53,7 @@ class TestCLI(unittest.TestCase):
         cmd = [
             sys.executable,
             "-m",
-            "tomato_promoter_designer.cli",
+            "tpsgen.cli",
             "validate-input",
             "--input",
             str(fasta_path),
@@ -77,7 +77,7 @@ class TestCLI(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "tomato_promoter_designer.cli",
+                    "tpsgen.cli",
                     "extract-promoters",
                     "--genome",
                     str(root / "genome.fa"),
@@ -108,7 +108,7 @@ class TestCLI(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "tomato_promoter_designer.cli",
+                    "tpsgen.cli",
                     "run",
                     "--input",
                     str(repo_root / "examples" / "demo_input.fasta"),
@@ -142,7 +142,7 @@ class TestCLI(unittest.TestCase):
         cmd = [
             sys.executable,
             "-m",
-            "tomato_promoter_designer.cli",
+            "tpsgen.cli",
             "annotate",
             "--input",
             str(fasta_path),
@@ -169,7 +169,7 @@ class TestCLI(unittest.TestCase):
         cmd = [
             sys.executable,
             "-m",
-            "tomato_promoter_designer.cli",
+            "tpsgen.cli",
             "predict-transvae",
             "--input",
             str(fasta_path),
@@ -197,7 +197,7 @@ class TestCLI(unittest.TestCase):
             cmd = [
                 sys.executable,
                 "-m",
-                "tomato_promoter_designer.cli",
+                "tpsgen.cli",
                 "predict-transvae",
                 "--input",
                 str(fasta_path),
@@ -223,7 +223,7 @@ class TestCLI(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "tomato_promoter_designer.cli",
+                    "tpsgen.cli",
                     "run",
                     "--input",
                     str(fasta_path),
@@ -273,7 +273,7 @@ class TestCLI(unittest.TestCase):
             cmd = [
                 sys.executable,
                 "-m",
-                "tomato_promoter_designer.cli",
+                "tpsgen.cli",
                 "annotate-dnabert",
                 "--dev-tsv",
                 str(dev_tsv),
@@ -311,7 +311,7 @@ class TestCLI(unittest.TestCase):
             cmd = [
                 sys.executable,
                 "-m",
-                "tomato_promoter_designer.cli",
+                "tpsgen.cli",
                 "figures",
                 "--input",
                 str(input_csv),
@@ -333,7 +333,7 @@ class TestCLI(unittest.TestCase):
             cmd = [
                 sys.executable,
                 "-m",
-                "tomato_promoter_designer.cli",
+                "tpsgen.cli",
                 "model-figures",
                 "--output-dir",
                 str(output_dir),

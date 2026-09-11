@@ -326,8 +326,8 @@ def build_kmer_comparison() -> tuple[Path, Path]:
 
 def build_design_candidate_summary() -> tuple[Path, Path]:
     rows = _read_csv(_resolve_source("designed_promoters_200"))
-    from tomato_promoter_designer.io.schema import SequenceRecord
-    from tomato_promoter_designer.pipeline.predict_transvae import run_transvae_prediction
+    from tpsgen.io.schema import SequenceRecord
+    from tpsgen.pipeline.predict_transvae import run_transvae_prediction
 
     original_records = [
         SequenceRecord(f"original_{row.get('input_index', index)}", row.get("orig_sequence", ""))

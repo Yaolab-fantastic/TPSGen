@@ -4,7 +4,7 @@ from pathlib import Path
 
 import torch
 
-from tomato_promoter_designer.models.transvae_mlp import (
+from tpsgen.models.transvae_mlp import (
     TransVAEMLP,
     encode_dna,
     fruit_bias_fitness,

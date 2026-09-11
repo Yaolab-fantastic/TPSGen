@@ -1,9 +1,9 @@
 import unittest
 
-from tomato_promoter_designer.io.schema import SequenceRecord
-from tomato_promoter_designer.pipeline.annotate import run_annotation
-from tomato_promoter_designer.pipeline.design import run_design
-from tomato_promoter_designer.pipeline.predict import run_prediction
+from tpsgen.io.schema import SequenceRecord
+from tpsgen.pipeline.annotate import run_annotation
+from tpsgen.pipeline.design import run_design
+from tpsgen.pipeline.predict import run_prediction
 
 
 class TestPipelines(unittest.TestCase):

@@ -449,7 +449,7 @@ not exposed as a public command in this release.
 
 ```text
 TPSGen/
-├── src/tomato_promoter_designer/   # package source and CLI
+├── src/tpsgen/   # package source and CLI
 ├── examples/                       # runnable FASTA examples
 ├── data/                           # curated data and retained result resources
 ├── docs/                           # tool documentation and manuscript sources

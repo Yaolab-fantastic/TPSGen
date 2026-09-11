@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 from Bio import __version__ as biopython_version
 
-from tomato_promoter_designer.legacy.dnabert_motif import (
+from tpsgen.legacy.dnabert_motif import (
     analyze_attention_dataset,
     kmer2seq,
     read_dnabert_dev_tsv,

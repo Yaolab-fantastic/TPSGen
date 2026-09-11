@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tomato_promoter_designer.pipeline.legacy_figures import run_legacy_figure_export
+from tpsgen.pipeline.legacy_figures import run_legacy_figure_export
 
 
 class TestLegacyFigureExport(unittest.TestCase):

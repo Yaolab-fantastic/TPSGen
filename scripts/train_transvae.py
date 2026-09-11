@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 
-from tomato_promoter_designer.training.transvae import load_training_config, train_transvae
+from tpsgen.training.transvae import load_training_config, train_transvae
 
 
 def main() -> None:

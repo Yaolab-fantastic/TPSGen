@@ -31,8 +31,8 @@ dev = ["build>=1.2", "twine>=5.1", "torch>=2.0"]
 reproduce = ["Pillow>=10.0"]
 
 [project.scripts]
-tpsgen = "tomato_promoter_designer.cli:main"
-tomato-promoter-designer = "tomato_promoter_designer.cli:main"
+tpsgen = "tpsgen.cli:main"
+tomato-promoter-designer = "tpsgen.cli:main"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

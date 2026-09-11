@@ -3,8 +3,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tomato_promoter_designer.io.csv import write_dict_rows
-from tomato_promoter_designer.pipeline.figures import run_figure_export
+from tpsgen.io.csv import write_dict_rows
+from tpsgen.pipeline.figures import run_figure_export
 
 
 class TestFigureExport(unittest.TestCase):

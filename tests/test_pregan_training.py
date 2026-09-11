@@ -5,7 +5,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from tomato_promoter_designer.training.pregan import (
+from tpsgen.training.pregan import (
     ConditionalDiscriminator,
     ConditionalGenerator,
     MaskedPromoterDataset,

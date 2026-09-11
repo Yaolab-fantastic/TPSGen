@@ -3,8 +3,8 @@ import unittest
 import csv
 from pathlib import Path
 
-from tomato_promoter_designer.io.schema import SequenceRecord
-from tomato_promoter_designer.pipeline.pregan_workflow import run_pregan_workflow
+from tpsgen.io.schema import SequenceRecord
+from tpsgen.pipeline.pregan_workflow import run_pregan_workflow
 
 
 class TestPreGANWorkflow(unittest.TestCase):

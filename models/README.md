@@ -53,5 +53,5 @@ generator.
 If the model directory is moved outside the repository, set:
 
 ```bash
-export TOMATO_PROMOTER_DESIGNER_MODELS_DIR=/path/to/models
+export TPSGEN_MODELS_DIR=/path/to/models
 ```
