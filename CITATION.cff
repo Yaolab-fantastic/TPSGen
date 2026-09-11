@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+title: "TPSGen: an integrated framework for motif-conditioned generation and tissue-bias prioritization of tomato promoters"
+message: "If you use this software, please cite this software release and the accompanying article when available."
+type: software
+authors:
+  - family-names: Fan
+    given-names: Zhoujie
+  - family-names: Wang
+    given-names: Xiaoyu
+  - family-names: Zhang
+    given-names: Haimeng
+  - family-names: Meng
+    given-names: Hao
+  - family-names: Liang
+    given-names: Hong
+  - family-names: Zhang
+    given-names: Tong
+  - family-names: Fu
+    given-names: Huazhu
+  - family-names: Cheng
+    given-names: Ching-Yu
+  - family-names: Cong
+    given-names: Shan
+  - family-names: Yao
+    given-names: Xiaohui
+  - family-names: Zhao
+    given-names: Cheng
+license: MIT
+version: 0.2.0
+date-released: 2026-07-08
+abstract: "A package-first toolkit for motif-aware design of tissue-biased tomato promoter sequences."
+keywords:
+  - bioinformatics
+  - promoter design
+  - tomato
+  - sequence generation
+  - synthetic biology

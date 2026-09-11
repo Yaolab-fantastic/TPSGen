@@ -1,0 +1,23 @@
+stage	path	source	note
+external	data/external/external_resources.tsv	external_resource_manifest	Optional large raw/model artifacts intentionally not copied into git.
+models	models/transvae/best_val_corr_model.pth	project training workflow	Bundled lightweight checkpoint for the explicit TransVAE scoring command.
+models	models/pregan_expression/165_mpra_expr_denselstm.pth	project training workflow	Bundled expression-constraint checkpoint used internally by the preGAN training smoke test.
+models	models/pregan_expression/SeqRegressionModel.py	project model source	Model class definition required to load the bundled preGAN expression-constraint checkpoint.
+raw	data/raw/dnabert/dev.tsv	project DNABERT-derived motif workflow	DNABERT sequence table used for attention-based motif processing.
+raw	data/raw/dnabert/atten.npy	project DNABERT-derived motif workflow	DNABERT attention scores aligned with dev.tsv.
+raw	data/raw/dnabert/tfbs_assets/	project DNABERT-derived motif workflow	TFBS logo assets used for retained motif summaries.
+raw	data/raw/transvae/*.csv	project TransVAE workflow	Promoter training, designed sequence and quantitative reference tables.
+raw	data/raw/transvae/blast_result.txt	project TransVAE workflow	BLAST tabular results used to rebuild similarity summary figures.
+raw	data/raw/transvae/sequences_with_id.csv	project TransVAE workflow	Sequence identifiers used to map BLAST hits back to sequence groups.
+raw	data/raw/transvae/blast/*.png	project TransVAE workflow	Curated English-only BLAST histogram figure assets.
+raw	data/raw/transvae/diversity/*.png	project TransVAE workflow	Retained diversity figure assets used for result traceability.
+raw	data/raw/pregan_expression/*	project preGAN expression-constraint workflow	Expression-constraint training log and scalar summary assets.
+raw	data/raw/pregan_expression/pregan_smoke.csv	project preGAN masked-promoter workflow	Small realA/realB/expr table for preGAN training-plumbing smoke tests.
+processed	data/processed/dnabert_legacy/motif_summary.csv	data/raw/dnabert/dev.tsv + data/raw/dnabert/atten.npy	Processed motif ranking from the DNABERT-derived adapter.
+processed	data/processed/dnabert_legacy/processed_sequences.csv	data/raw/dnabert/dev.tsv + data/raw/dnabert/atten.npy	Per-sequence processed motif annotations from the DNABERT-derived adapter.
+processed	data/processed/dnabert_legacy/run_metadata.json	data/raw/dnabert/dev.tsv + data/raw/dnabert/atten.npy	Run metadata for DNABERT-derived motif processing.
+results	data/results/demo/*	generated_from_examples	Deterministic package-native demo outputs.
+results	data/results/figures_*/*	generated_from_repository_tables	Generated software-output SVG figures and manifests.
+results	data/results/reproducible_legacy/*	generated_from_project_tables	Retained manuscript-facing project result pack.
+results	data/results/supplementary/*	generated_from_project_tables	Supplementary multi-promoter input and output resources.
+results	data/results/legacy_figures_bundle/*	generated_from_project_tables	Retained model figure bundle kept for compatibility with existing project paths.

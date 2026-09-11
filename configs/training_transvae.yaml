@@ -1,0 +1,19 @@
+# Minimal TransVAE training configuration.
+# The output checkpoint is compatible with:
+#   tpsgen predict-transvae --checkpoint <path>
+
+input_csv: data/raw/transvae/training_set.csv
+sequence_column: realB
+tissue_columns: [expr_tissue_1, expr_tissue_2, expr_tissue_3, expr_tissue_4]
+output_checkpoint: models/transvae/trained_transvae_model.pth
+metrics_json: models/transvae/trained_transvae_metrics.json
+sequence_length: 165
+latent_dim: 128
+batch_size: 64
+epochs: 20
+learning_rate: 0.001
+validation_fraction: 0.1
+seed: 42
+prediction_weight: 1.0
+max_rows: null
+device: cpu

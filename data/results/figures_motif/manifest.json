@@ -1,0 +1,8 @@
+{
+  "input_csv": "data/processed/dnabert_legacy/motif_summary.csv",
+  "output_dir": "data/results/figures_motif",
+  "figure_type": "motif",
+  "files": [
+    "motif_enrichment.svg"
+  ]
+}

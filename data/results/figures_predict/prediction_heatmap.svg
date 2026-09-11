@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="268" viewBox="0 0 880 268" role="img">
+<rect width="100%" height="100%" fill="#fcfbf7"/>
+<text x="40" y="42" font-size="24" font-family="Arial, sans-serif" fill="#1d2a2f">Tissue-associated Score Heatmap</text>
+<text x="40" y="66" font-size="12" font-family="Arial, sans-serif" fill="#5b666b">Generated from tissue-score results for package reports and manuscript figures.</text>
+<text x="275.0" y="74" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#33454d">root</text>
+<text x="405.0" y="74" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#33454d">stem</text>
+<text x="535.0" y="74" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#33454d">leaf</text>
+<text x="665.0" y="74" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#33454d">fruit</text>
+<text x="42" y="116" font-size="12" font-family="Arial, sans-serif" fill="#22333b">tomato_promoter_1</text>
+<text x="42" y="132" font-size="11" font-family="Arial, sans-serif" fill="#7a5c2e">preferred: fruit</text>
+<rect x="210" y="92" width="120" height="38" rx="7" fill="rgb(245,247,244)" stroke="#d7d2c8"/>
+<text x="270.0" y="116" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#182126">1.222</text>
+<rect x="340" y="92" width="120" height="38" rx="7" fill="rgb(221,227,205)" stroke="#d7d2c8"/>
+<text x="400.0" y="116" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#182126">2.269</text>
+<rect x="470" y="92" width="120" height="38" rx="7" fill="rgb(231,236,222)" stroke="#d7d2c8"/>
+<text x="530.0" y="116" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#182126">1.827</text>
+<rect x="600" y="92" width="120" height="38" rx="7" fill="rgb(168,184,118)" stroke="#d7d2c8"/>
+<text x="660.0" y="116" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#182126">4.682</text>
+<text x="42" y="170" font-size="12" font-family="Arial, sans-serif" fill="#22333b">tomato_promoter_2</text>
+<text x="42" y="186" font-size="11" font-family="Arial, sans-serif" fill="#7a5c2e">preferred: stem</text>
+<rect x="210" y="146" width="120" height="38" rx="7" fill="rgb(231,236,222)" stroke="#d7d2c8"/>
+<text x="270.0" y="170" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#182126">1.815</text>
+<rect x="340" y="146" width="120" height="38" rx="7" fill="rgb(135,157,64)" stroke="#d7d2c8"/>
+<text x="400.0" y="170" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#182126">6.179</text>
+<rect x="470" y="146" width="120" height="38" rx="7" fill="rgb(236,240,230)" stroke="#d7d2c8"/>
+<text x="530.0" y="170" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#182126">1.585</text>
+<rect x="600" y="146" width="120" height="38" rx="7" fill="rgb(160,177,105)" stroke="#d7d2c8"/>
+<text x="660.0" y="170" text-anchor="middle" font-size="13" font-family="Arial, sans-serif" fill="#182126">5.034</text>
+</svg>

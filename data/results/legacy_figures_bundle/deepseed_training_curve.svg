@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="700" viewBox="0 0 1040 700" role="img">
+<rect width="100%" height="100%" fill="#fcfbf7"/>
+<text x="36" y="40" font-size="24" font-family="Arial, sans-serif" fill="#1d2a2f">DeepSeed Predictor Training Summary</text>
+<text x="36" y="64" font-size="12" font-family="Arial, sans-serif" fill="#5b666b">Reconstructed from the archived training log. Curves summarize optimization and validation correlation.</text>
+<text x="90" y="92" font-size="13" font-family="Arial, sans-serif" fill="#33454d">Train Loss</text>
+<rect x="90" y="110" width="880" height="150" rx="8" fill="#fffdf8" stroke="#ddd7cb"/>
+<line x1="108" y1="244" x2="952" y2="244" stroke="#d8d2c7"/>
+<line x1="108" y1="122" x2="108" y2="244" stroke="#d8d2c7"/>
+<polyline fill="none" stroke="#c85c38" stroke-width="2.5" points="108.00,124.00 148.19,184.63 188.38,185.45 228.57,185.29 268.76,186.72 308.95,187.19 349.14,187.55 389.33,188.72 429.52,190.34 469.71,191.03 509.90,193.45 550.10,196.14 590.29,198.06 630.48,200.94 670.67,205.32 710.86,211.00 751.05,215.02 791.24,218.92 831.43,223.29 871.62,232.10 911.81,238.25 952.00,246.00"/>
+<text x="962" y="128" text-anchor="end" font-size="11" font-family="Arial, sans-serif" fill="#6a7478">epochs 22</text>
+<text x="962" y="144" text-anchor="end" font-size="11" font-family="Arial, sans-serif" fill="#6a7478">last 128.5993</text>
+<text x="90" y="302" font-size="13" font-family="Arial, sans-serif" fill="#33454d">Validation Loss</text>
+<rect x="90" y="320" width="880" height="150" rx="8" fill="#fffdf8" stroke="#ddd7cb"/>
+<line x1="108" y1="454" x2="952" y2="454" stroke="#d8d2c7"/>
+<line x1="108" y1="332" x2="108" y2="454" stroke="#d8d2c7"/>
+<polyline fill="none" stroke="#4f6d7a" stroke-width="2.5" points="108.00,452.28 148.19,448.77 188.38,454.08 228.57,435.69 268.76,456.00 308.95,453.44 349.14,452.29 389.33,454.49 429.52,443.39 469.71,430.44 509.90,451.07 550.10,448.12 590.29,334.00 630.48,444.24 670.67,424.33 710.86,440.83 751.05,428.15 791.24,361.68 831.43,396.55 871.62,416.09 911.81,353.69 952.00,412.22"/>
+<text x="962" y="338" text-anchor="end" font-size="11" font-family="Arial, sans-serif" fill="#6a7478">epochs 22</text>
+<text x="962" y="354" text-anchor="end" font-size="11" font-family="Arial, sans-serif" fill="#6a7478">last 340.7347</text>
+<text x="90" y="512" font-size="13" font-family="Arial, sans-serif" fill="#33454d">Validation Pearson</text>
+<rect x="90" y="530" width="880" height="150" rx="8" fill="#fffdf8" stroke="#ddd7cb"/>
+<line x1="108" y1="664" x2="952" y2="664" stroke="#d8d2c7"/>
+<line x1="108" y1="542" x2="108" y2="664" stroke="#d8d2c7"/>
+<polyline fill="none" stroke="#c0a145" stroke-width="2.5" points="108.00,622.08 148.19,666.00 188.38,589.10 228.57,600.76 268.76,643.08 308.95,609.35 349.14,578.85 389.33,591.90 429.52,587.51 469.71,640.70 509.90,613.79 550.10,544.00 590.29,563.60 630.48,632.39 670.67,618.07 710.86,565.18 751.05,575.68 791.24,572.34 831.43,566.01 871.62,593.17 911.81,590.27 952.00,578.67"/>
+<text x="962" y="548" text-anchor="end" font-size="11" font-family="Arial, sans-serif" fill="#6a7478">epochs 22</text>
+<text x="962" y="564" text-anchor="end" font-size="11" font-family="Arial, sans-serif" fill="#6a7478">last 0.0211</text>
+<text x="90" y="672" font-size="12" font-family="Arial, sans-serif" fill="#5b666b">DeepSeed summary recreated from the archived optimization log; expanded margins prevent bottom-panel clipping.</text>
+</svg>

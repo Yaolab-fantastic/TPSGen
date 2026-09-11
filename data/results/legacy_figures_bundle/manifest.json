@@ -1,0 +1,22 @@
+{
+  "output_dir": "data/results/legacy_figures_bundle",
+  "generated": [
+    "mpravae_loss_dashboard.svg",
+    "mpravae_kmer_scatter.svg",
+    "mpravae_semantic_space.svg",
+    "mpravae_prediction_scatter.svg",
+    "deepseed_training_curve.svg",
+    "mpravae_edit_distance_diversity.svg",
+    "dnabert_tfbs_assets/TFBS_CTATT.png",
+    "dnabert_tfbs_assets/TFBS_ATTTT.png",
+    "dnabert_tfbs_assets/TFBS_CAAAA.png",
+    "dnabert_tfbs_assets/TFBS_TTTAT.png",
+    "dnabert_tfbs_assets/TFBS_TCTTA.png",
+    "dnabert_tfbs_assets/TFBS_TTAAA.png",
+    "scatter_165_mpra_expr_denselstm.png",
+    "blast/blast_evalue_hist_stacked.png",
+    "blast/blast_evalue_hist_stacked2.png",
+    "diversity/edit_distance_diversity.png",
+    "diversity/edit_distance_diversity1.png"
+  ]
+}

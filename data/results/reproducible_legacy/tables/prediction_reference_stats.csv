@@ -1,0 +1,2 @@
+source_file,predicted_column,true_column,source_rows,valid_pairs,excluded_rows,pearson_r
+data/raw/transvae/generated_prediction_results.csv,Predicted_Expr,True_Expr,12575,12575,0,0.8520973740511573

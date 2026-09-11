@@ -1,0 +1,65 @@
+{
+  "version": "0.2.0",
+  "models": [
+    {
+      "name": "tomato_dnabert_6mer_classifier",
+      "type": "dnabert_sequence_classifier",
+      "status": "bundled",
+      "weights_path": "models/dnabert/pytorch_model.bin",
+      "support_files": [
+        "models/dnabert/config.json",
+        "models/dnabert/vocab.txt"
+      ],
+      "sha256": "030fb84dab4ccafd896cac3d8df463bf6fd5a68156c5f43eb373351993d11501",
+      "notes": "Tomato fine-tuned 6-mer DNABERT checkpoint used by predict-dnabert."
+    },
+    {
+      "name": "heuristic_expression_predictor",
+      "type": "baseline",
+      "status": "bundled",
+      "weights_path": null
+    },
+    {
+      "name": "motif_preserving_designer",
+      "type": "baseline",
+      "status": "bundled",
+      "weights_path": null
+    },
+    {
+      "name": "pregan_expression_constraint_denselstm",
+      "type": "pregan_internal_resource",
+      "status": "bundled",
+      "weights_path": "models/pregan_expression/165_mpra_expr_denselstm.pth",
+      "support_code": "models/pregan_expression/SeqRegressionModel.py",
+      "sha256": "fec9ae772a4ca39635b25e7fdb7dddbd2d4d83b333979276701a680dac60c86c",
+      "notes": "Expression-constraint checkpoint used during preGAN generator training; not the generator itself."
+    },
+    {
+      "name": "transvae_tomato_joint_predictor",
+      "type": "transvae_model_adapter",
+      "status": "bundled",
+      "weights_path": "models/transvae/best_val_corr_model.pth",
+      "sha256": "cdc55cd2ce796386a5be74b8697790cbad70e7bcb6cfff85e189b234c9628f78",
+      "architecture": "Transformer-VAE encoder with 128-dimensional latent representation and four-output MLP predictor",
+      "source_convention": "project Transformer-VAE training workflow; 165-bp tomato promoter input",
+      "notes": "Paper-aligned tomato Transformer-VAE plus MLP scoring checkpoint. Loaded with strict state_dict compatibility."
+    },
+    {
+      "name": "tomato_pregan_conditional_generator",
+      "type": "pregan_generator",
+      "status": "trained_local_checkpoint",
+      "weights_path": "models/pregan/generator_checkpoint.pt",
+      "sha256": "2f3735463cd614a9564069c204f79c84ace42c549c0cf3bba79bdabffba2da05",
+      "training_records": 5100,
+      "training_steps": 1000,
+      "training_data": "retained tomato paired promoter table",
+      "qc_summary": {
+        "fixed_position_preservation_rate": 1.0,
+        "unique_sequence_rate": 0.2,
+        "maximum_homopolymer_observed": 9,
+        "qc_evaluation_candidates": 20
+      },
+      "notes": "Computational generator checkpoint trained on the retained tomato paired table; external biological validation remains required."
+    }
+  ]
+}

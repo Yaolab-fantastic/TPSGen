@@ -1,0 +1,8 @@
+{
+  "input_csv": "data/results/demo/demo_predict.csv",
+  "output_dir": "data/results/figures_predict",
+  "figure_type": "prediction",
+  "files": [
+    "prediction_heatmap.svg"
+  ]
+}

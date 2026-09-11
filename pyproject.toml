@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tpsgen"
+version = "0.2.0"
+description = "Integrated motif-aware design of tissue-biased tomato promoters."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [
+  {name = "TPSGen Authors"}
+]
+keywords = ["bioinformatics", "promoter", "tomato", "sequence-design", "synthetic-biology"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Bio-Informatics"
+]
+dependencies = ["biopython>=1.85", "numpy>=1.24"]
+
+[project.optional-dependencies]
+models = ["torch>=2.0"]
+dnabert = ["torch>=2.0", "transformers>=4.30,<5"]
+training = ["torch>=2.0"]
+dev = ["build>=1.2", "twine>=5.1", "torch>=2.0"]
+reproduce = ["Pillow>=10.0"]
+
+[project.scripts]
+tpsgen = "tomato_promoter_designer.cli:main"
+tomato-promoter-designer = "tomato_promoter_designer.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.data-files]
+"share/tomato-promoter-designer/models/transvae" = [
+  "models/transvae/best_val_corr_model.pth"
+]
+"share/tomato-promoter-designer/models/dnabert" = [
+  "models/dnabert/pytorch_model.bin",
+  "models/dnabert/config.json",
+  "models/dnabert/vocab.txt",
+  "models/dnabert/tokenizer_config.json",
+  "models/dnabert/special_tokens_map.json"
+]
+"share/tomato-promoter-designer/models/pregan_expression" = [
+  "models/pregan_expression/165_mpra_expr_denselstm.pth",
+  "models/pregan_expression/SeqRegressionModel.py"
+]
+"share/tomato-promoter-designer/models/pregan" = [
+  "models/pregan/generator_checkpoint.pt"
+]
+"share/tomato-promoter-designer/configs" = [
+  "configs/training_transvae.yaml"
+]
+"share/tomato-promoter-designer/examples" = [
+  "examples/demo_input.fasta",
+  "examples/expected_output.csv"
+]
+"share/tomato-promoter-designer" = [
+  "RESOURCE_LICENSES.md"
+]

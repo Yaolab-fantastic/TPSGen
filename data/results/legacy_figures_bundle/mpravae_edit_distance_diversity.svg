@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" role="img">
+<rect width="100%" height="100%" fill="#fcfbf7"/>
+<text x="36" y="40" font-size="24" font-family="Arial, sans-serif" fill="#1d2a2f">MpraVAE Edit-distance Diversity</text>
+<text x="36" y="64" font-size="12" font-family="Arial, sans-serif" fill="#5b666b">Diversity summary comparing natural, random, and generated promoter groups.</text>
+<rect x="90" y="100" width="720" height="340" rx="8" fill="#fffdf8" stroke="#ddd7cb"/>
+<line x1="90" y1="440" x2="810" y2="440" stroke="#c8c3b7"/>
+<line x1="90" y1="440" x2="90" y2="100" stroke="#c8c3b7"/>
+<polyline fill="none" stroke="#5d6cc1" stroke-width="2.4" points="110.00,439.75 150.00,438.74 190.00,434.97 230.00,425.16 270.00,406.30 310.00,366.57 350.00,300.18 390.00,224.24 430.00,158.11 470.00,140.00 510.00,157.35 550.00,228.01 590.00,309.24 630.00,377.13 670.00,406.05 710.00,426.17 750.00,433.96 790.00,437.49"/>
+<polyline fill="none" stroke="#d4795b" stroke-width="2.4" points="148.89,439.79 186.67,439.79 224.44,438.13 262.22,434.39 300.00,414.45 337.78,371.02 375.56,288.55 413.33,193.81 451.11,290.00 488.89,140.00 526.67,190.90 564.44,278.37 602.22,360.01 640.00,404.89 677.78,426.91 715.56,435.43 753.33,438.34 791.11,439.38"/>
+<polyline fill="none" stroke="#5ca36d" stroke-width="2.4" points="110.00,439.76 150.00,439.04 190.00,435.45 230.00,426.12 270.00,409.14 310.00,373.73 350.00,318.95 390.00,243.59 430.00,163.92 470.00,140.00 510.00,151.24 550.00,224.69 590.00,310.57 630.00,395.26 670.00,417.75 710.00,432.82 750.00,436.41 790.00,439.04"/>
+<line x1="690" y1="124" x2="714" y2="124" stroke="#5d6cc1" stroke-width="3"/>
+<text x="722" y="128" font-size="11" font-family="Arial, sans-serif" fill="#33454d">Natural mean 92.4</text>
+<line x1="690" y1="146" x2="714" y2="146" stroke="#d4795b" stroke-width="3"/>
+<text x="722" y="150" font-size="11" font-family="Arial, sans-serif" fill="#33454d">Random mean 93.2</text>
+<line x1="690" y1="168" x2="714" y2="168" stroke="#5ca36d" stroke-width="3"/>
+<text x="722" y="172" font-size="11" font-family="Arial, sans-serif" fill="#33454d">VAE mean 92.4</text>
+<text x="90" y="468" font-size="12" font-family="Arial, sans-serif" fill="#33454d">Edit distance</text>
+<text x="90" y="88" font-size="12" font-family="Arial, sans-serif" fill="#33454d">Relative frequency</text>
+</svg>

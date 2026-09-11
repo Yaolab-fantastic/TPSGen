@@ -1,0 +1,7 @@
+sequence_id,motif,start,end,score
+tomato_promoter_1,CAAAA,18,23,5.0
+tomato_promoter_2,CAAAA,63,68,5.0
+tomato_promoter_2,TTAAA,46,51,5.0
+tomato_promoter_2,TTAAA,52,57,5.0
+tomato_promoter_2,TTTAT,25,30,5.0
+tomato_promoter_2,TTTAT,156,161,5.0

@@ -1,0 +1,24 @@
+include README.md
+include LICENSE
+include CITATION.cff
+include RESOURCE_LICENSES.md
+include models/README.md
+include models/weights_manifest.json
+include models/transvae/best_val_corr_model.pth
+include models/pregan_expression/165_mpra_expr_denselstm.pth
+include models/pregan_expression/SeqRegressionModel.py
+include data/README.md
+include data/inventory.tsv
+include data/source_registry.tsv
+include data/external/external_resources.tsv
+include data/raw/pregan_expression/pregan_smoke.csv
+include docs/tool_documentation.md
+include docs/training.md
+include docs/model_migration_audit.md
+recursive-include examples *.fasta
+include examples/expected_output.csv
+include scripts/train_transvae.py
+include scripts/train_pregan_smoke.py
+recursive-include configs *.yaml
+global-exclude __pycache__/*
+global-exclude *.py[cod]

@@ -1,0 +1,4 @@
+comparison,n,mean_edit_distance,min_edit_distance,max_edit_distance
+original_vs_generated,199,84.33165829145729,60,112
+original_vs_random,199,94.60301507537689,84,110
+generated_vs_random,199,96.83417085427136,86,108

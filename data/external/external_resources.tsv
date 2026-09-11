@@ -1,0 +1,7 @@
+resource	required_for	bundled	default_location	availability_note
+Tomato reference genome	optional promoter extraction and upstream sequence reconstruction	no	external/tomato_reference_genome.fna	Obtain from the cited genome resource or a project archive; not required for normal package use.
+Synthetic promoter HDF5 corpus	full MpraVAE corpus inspection or retraining	no	external/mpravae_synthetic_sequences.h5	Not required for bundled prediction, design or demonstration commands.
+BLAST database shards	optional generated-sequence similarity checks	no	external/blast_database/	Not required for normal tool use.
+DNABERT fine-tuned checkpoint	rerunning DNABERT inference before motif post-processing	no	external/dnabert_checkpoint/	The bundled annotate-dnabert command consumes precomputed attention resources and does not require this checkpoint.
+preGAN full masked training table	full preGAN retraining with realA/realB/expr records	no	external/pregan/merged_result.csv	The repository bundles only data/raw/pregan_expression/pregan_smoke.csv for training-plumbing tests; full retraining data should be distributed separately with checksum and provenance metadata.
+DeepSEED/preGAN validated generator checkpoint	preGAN generation inference after corrected retraining and validation	no	external/deepseed/pregan_generator.pt	No validated generator checkpoint is included in the current release, so no preGAN inference command is exposed.

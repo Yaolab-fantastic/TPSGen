@@ -1,0 +1,47 @@
+{
+  "num_rows": 6,
+  "num_input_sequences": 2,
+  "num_unique_designed_sequences": 6,
+  "target_tissues": [
+    "fruit"
+  ],
+  "canonical_length": 165,
+  "average_edit_distance": 17.6667,
+  "average_num_mutations": 17.6667,
+  "min_num_mutations": 13,
+  "max_num_mutations": 24,
+  "num_qc_passed": 0,
+  "qc_pass_rate": null,
+  "design_status_counts": {
+    "baseline_motif_preserving": 6
+  },
+  "design_status_display_counts": {
+    "Baseline motif-preserving": 6
+  },
+  "best_candidate_by_sequence": [
+    {
+      "sequence_id": "tomato_promoter_1",
+      "target_tissue": "fruit",
+      "best_candidate_rank": 1,
+      "design_status": "baseline_motif_preserving",
+      "design_status_label": "Baseline motif-preserving",
+      "passes_qc": null,
+      "num_mutations": 17,
+      "target_score": 9.2427,
+      "runner_up_score": 4.2048,
+      "target_margin": 5.0379
+    },
+    {
+      "sequence_id": "tomato_promoter_2",
+      "target_tissue": "fruit",
+      "best_candidate_rank": 1,
+      "design_status": "baseline_motif_preserving",
+      "design_status_label": "Baseline motif-preserving",
+      "passes_qc": null,
+      "num_mutations": 24,
+      "target_score": 9.4161,
+      "runner_up_score": 6.1406,
+      "target_margin": 3.2755
+    }
+  ]
+}
