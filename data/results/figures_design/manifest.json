@@ -1,8 +1,0 @@
-{
-  "input_csv": "data/results/demo/demo_design.csv",
-  "output_dir": "data/results/figures_design",
-  "figure_type": "design",
-  "files": [
-    "design_summary.svg"
-  ]
-}

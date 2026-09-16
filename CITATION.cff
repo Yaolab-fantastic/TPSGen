@@ -19,12 +19,12 @@ authors:
     given-names: Huazhu
   - family-names: Cheng
     given-names: Ching-Yu
-  - family-names: Cong
-    given-names: Shan
   - family-names: Yao
     given-names: Xiaohui
   - family-names: Zhao
     given-names: Cheng
+  - family-names: Cong
+    given-names: Shan
 license: MIT
 version: 0.2.0
 date-released: 2026-07-08
