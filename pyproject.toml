@@ -32,7 +32,6 @@ reproduce = ["Pillow>=10.0"]
 
 [project.scripts]
 tpsgen = "tpsgen.cli:main"
-tomato-promoter-designer = "tpsgen.cli:main"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
@@ -47,30 +46,30 @@ include-package-data = false
 where = ["src"]
 
 [tool.setuptools.data-files]
-"share/tomato-promoter-designer/models/transvae" = [
+"share/tpsgen/models/transvae" = [
   "models/transvae/best_val_corr_model.pth"
 ]
-"share/tomato-promoter-designer/models/dnabert" = [
+"share/tpsgen/models/dnabert" = [
   "models/dnabert/pytorch_model.bin",
   "models/dnabert/config.json",
   "models/dnabert/vocab.txt",
   "models/dnabert/tokenizer_config.json",
   "models/dnabert/special_tokens_map.json"
 ]
-"share/tomato-promoter-designer/models/pregan_expression" = [
+"share/tpsgen/models/pregan_expression" = [
   "models/pregan_expression/165_mpra_expr_denselstm.pth",
   "models/pregan_expression/SeqRegressionModel.py"
 ]
-"share/tomato-promoter-designer/models/pregan" = [
+"share/tpsgen/models/pregan" = [
   "models/pregan/generator_checkpoint.pt"
 ]
-"share/tomato-promoter-designer/configs" = [
+"share/tpsgen/configs" = [
   "configs/training_transvae.yaml"
 ]
-"share/tomato-promoter-designer/examples" = [
+"share/tpsgen/examples" = [
   "examples/demo_input.fasta",
   "examples/expected_output.csv"
 ]
-"share/tomato-promoter-designer" = [
+"share/tpsgen" = [
   "RESOURCE_LICENSES.md"
 ]

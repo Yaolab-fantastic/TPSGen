@@ -35,7 +35,7 @@ def _default_models_dir() -> Path:
     installed_models = (
         Path(sysconfig.get_path("data"))
         / "share"
-        / "tomato-promoter-designer"
+        / "tpsgen"
         / "models"
     )
     if installed_models.exists():

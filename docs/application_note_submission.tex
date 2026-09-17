@@ -32,7 +32,7 @@
 \author{Tong Zhang}
 \author[6]{Huazhu Fu\ORCID{0000-0002-9702-5524}}
 \author[7]{Ching-Yu Cheng}
-\author{Weihua Pan}
+\author[]{Weihua Pan}
 \author[1,2,3,7,*]{Xiaohui Yao\ORCID{0000-0002-8530-7989}}
 \author[*]{Cheng Zhao}
 \author[1,2,3,8,*]{Shan Cong\ORCID{0000-0002-5981-7678}}
@@ -42,9 +42,13 @@
 \address[3]{\orgname{Sanya Nanhai Innovation and Development Base of Harbin Engineering University}, \orgaddress{\street{Sanya}, \postcode{572024}, \country{China}}}
 \address[4]{\orgdiv{School of Psychological and Cognitive Sciences}, \orgname{Peking University}, \orgaddress{\street{Beijing}, \postcode{100871}, \country{China}}}
 \address[5]{\orgdiv{School of Biomedical Engineering}, \orgname{Hainan University}, \orgaddress{\street{Sanya}, \postcode{572025}, \country{China}}}
-\address[6]{\orgdiv{Institute for Infocomm Research}, \orgname{Agency for Science, Technology and Research}, \orgaddress{\street{Singapore}, \postcode{138632}, \country{Singapore}}}
+\address[6]{\orgdiv{Institute of Advanced Intelligence and Computing (IAIC)}, \orgname{Agency for Science, Technology and Research}, \orgaddress{\street{Singapore}, \postcode{138632}, \country{Singapore}}}
 \address[7]{\orgdiv{Department of Ophthalmology, Yong Loo Lin School of Medicine}, \orgname{National University of Singapore}, \orgaddress{\street{Singapore}, \postcode{119228}, \country{Singapore}}}
 \address[8]{\orgdiv{Stem Cell and Regenerative Biology, Genome Institute of Singapore}, \orgname{A*STAR}, \orgaddress{\street{Singapore}, \postcode{138672}, \country{Singapore}}}
+
+% \address[]{\orgdiv{Shenzhen Branch, Guangdong Laboratory of Lingnan Modern Agriculture}, \orgname{Agricultural Genomics Institute at Shenzhen, Chinese Academy of Agricultural Sciences}, \orgaddress{\street{Shenzhen}, \postcode{518120}, \country{China}}}
+
+
 
 \corresp[*]{Corresponding authors. Xiaohui Yao (\href{mailto:xiaohui.yao@hrbeu.edu.cn}{xiaohui.yao@hrbeu.edu.cn}); Shan Cong (\href{mailto:shan.cong@hrbeu.edu.cn}{shan.cong@hrbeu.edu.cn})}
 
@@ -75,13 +79,13 @@ In practice, tissue-associated scoring, candidate generation and post-design seq
 
 Recent software-focused Application Notes have likewise emphasized installable implementations, standardized interfaces, cross-step workflow integration and reproducible reporting rather than the introduction of a new algorithmic architecture \citep{Lanau2025,RuzJurado2026}. These precedents motivate the framework-oriented presentation adopted here: the contribution of TPSGen is an application workflow that makes complementary promoter-design operations accessible through one reproducible interface, while the underlying sequence-modeling methods are established methods cited separately.
 
-% 中文注释：引言第三段给出本文贡献。正确写法是“reproducible Python framework / workflow / CLI / reporting”，不要写“novel architecture”“state-of-the-art model”。这段要锁定软件发布定位。
+
 Here, we present TPSGen, a reproducible Python framework for motif-aware generation and tissue-bias prioritization of tomato promoter candidates. TPSGen formulates promoter design as a continuous workflow: input sequences are validated and interpreted, sequence evidence is used to constrain candidate construction, and the resulting candidates are scored across four tomato tissues and ranked using a target-bias measure. Package-native deterministic modules provide an immediately executable route, while optional model-backed routes extend sequence evidence and conditional generation. This organization turns complementary computational operations into a single user-facing application with shared input/output schemas, structured reports and provenance records.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{framework_v2.png}
-% 中文注释：主图图注要让 reviewer 快速理解软件输入、核心模块、输出和 retained reference 的边界。D panel 不能写成模型 benchmark，只能写 reproducibility/reference。
+
 \caption{Overview of TPSGen. (A) One or more 165-bp tomato promoter sequences are supplied in FASTA format. Package-native motif annotations or optional DNABERT-derived evidence support motif-aware candidate construction, after which the original and designed sequences can be evaluated using four tissue-associated scores. The workflow reports motif evidence, candidate promoter sequences and tissue-bias rankings. (B) Integrated model architectures and representative outputs. DNABERT converts promoter sequence context into overlapping 6-mer tokens and derives position-wise model evidence and recurrent sequence patterns. When a compatible checkpoint is supplied, preGAN combines retained high-evidence regions with masked editable positions and a frozen fruit-associated predictor to generate conditional candidates. The TransVAE-MLP adapter encodes promoter sequences into a latent representation and uses an MLP to produce root-, stem-, leaf- and fruit-associated scores for bias assessment and candidate ranking. Backend choices and checkpoint use are recorded in the run provenance. All score and generation outputs are computational results and do not by themselves establish experimentally validated tissue specificity.}
 \label{fig:framework}
 \end{figure*}
@@ -94,11 +98,18 @@ TPSGen is a modular Python command-line framework that standardizes tomato promo
 
 The primary input is a multi-record FASTA file containing tomato promoter sequences represented as the project-defined 165-bp windows. TPSGen validates sequence length and alphabet, records rejected records and writes a provenance manifest containing the package version, route, seed and input summary. The model-backed routes therefore have an explicit, reproducible input contract rather than accepting arbitrary genomic sequences without qualification.
 
-Promoter interpretation is provided by a transparent package-native motif scanner and an optional DNABERT-based evidence route. The latter processes overlapping 6-mer tokens and reports position-associated evidence and motif summaries \citep{Ji2021}; it is a project-derived inference route rather than a new DNABERT architecture. Both routes expose their results through standardized tables that can be inspected before candidate construction (Supplementary Section S2).
+Promoter interpretation is provided by a transparent package-native motif scanner and an optional DNABERT-based evidence route. The latter processes overlapping 6-mer tokens and reports position-associated evidence and model-derived recurrent motif-like patterns \citep{Ji2021}; these patterns are subsequently referred to as motifs for brevity and are not asserted to be experimentally validated transcription-factor binding sites. Both routes expose their results through standardized tables that can be inspected before candidate construction (Supplementary Section S2).
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{fig2.png}
+\caption{Computational characterization of TPSGen-designed tomato promoter candidates from a fixed package-native run. (A) Fruit-associated score distributions for input promoters and Rank-1 candidates. (B) Fruit-bias margin distributions, where the dashed line marks zero margin. (C) Pairwise Hamming-distance distributions describing sequence-level diversity within each group. (D) Agreement between aggregated 4-mer frequencies of input promoters and Rank-1 candidates; each point represents one 4-mer and the dashed line denotes equality. (E) Position-wise sequence composition of the input promoters and Rank-1 candidates, with the central track showing the maximum nucleotide-frequency change at each position. All values are computational prioritization outputs and do not establish experimentally validated tissue-specific expression.}
+\label{fig:main-results}
+\end{figure*}
 
 \subsection{Candidate generation and tissue-associated scoring}
 
-TPSGen separates candidate construction from prioritization while exposing both through the same workflow. The default route performs deterministic motif-aware editing by protecting detected motif positions and applying seeded substitutions to editable positions. When a compatible checkpoint is supplied, the optional preGAN route uses masked 165-bp templates and fruit-associated scalar guidance for conditional generation. In both cases, generation denotes computational candidate construction and not experimentally confirmed promoter activity.
+TPSGen separates candidate construction from prioritization while exposing both through the same workflow. The default route performs deterministic motif-aware editing by protecting detected motif positions and applying seeded substitutions to editable positions. When a compatible checkpoint is supplied, the optional preGAN route uses masked 165-bp templates and fruit-associated scalar guidance for conditional generation. Fruit guidance is applied during candidate generation, whereas tissue bias is assessed subsequently using the four-tissue scoring model. In both cases, generation denotes computational candidate construction and not experimentally confirmed promoter activity.
 
 For prioritization, the selected scoring backend reports root-, stem-, leaf- and fruit-associated scores and calculates a target-bias margin for ranking. Backend-specific scores are not assumed to share a common calibration; tissue bias is therefore a computational prioritization signal, not TPM or experimentally validated tissue specificity (Supplementary Section S4).
 
@@ -107,21 +118,13 @@ A central function of TPSGen is to generate candidate FASTA records and evaluate
 Structured reports, example inputs, model resources and provenance manifests support reproducible use. The repository documents optional checkpoint-backed routes separately from the package-native workflow and records the selected backend for each run.
 
 
-
 \section{Application Example and Reproducibility}
 
-TPSGen was evaluated as a reproducible software workflow rather than as a new machine-learning benchmark. We assessed a fixed package-native run on 40 tomato promoter sequences of 165 bp, generating three candidates per input with a fixed seed and retaining the complete output manifest.
+TPSGen was assessed as a reproducible software workflow rather than as a new machine-learning benchmark. We used a fixed demonstration set of 40 tomato promoter sequences of 165 bp, generated three candidates per input with a fixed seed and retained the complete output manifest. This run was designed to demonstrate reproducible execution and output interpretation, not to estimate population-level performance.
 
 The run produced motif annotations, candidate FASTA sequences, four score fields, quality-control summaries and a provenance report without manual format conversion. Candidates were ranked using the fruit-associated score and target-bias margin; these outputs support computational prioritization only and are not measurements of promoter expression.
 
 The integrated output of this representative run is summarized in Fig.~\ref{fig:main-results}. The figure reports target-oriented score distributions, 4-mer composition, sequence-level diversity and position-wise sequence remodeling for the input promoters and their Rank-1 candidates. These are computational outputs from one reproducible run and are not experimental measurements of promoter activity.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{fig2.png}
-\caption{Computational evaluation of TPSGen-designed tomato promoter candidates from a fixed package-native run. (A) Fruit-associated score distributions for input promoters and Rank-1 candidates. (B) Fruit-bias margin distributions, where the dashed line marks zero margin. (C) Pairwise Hamming-distance distributions describing sequence-level diversity within each group. (D) Agreement between aggregated 4-mer frequencies of input promoters and Rank-1 candidates; each point represents one 4-mer and the dashed line denotes equality. (E) Position-wise sequence composition of the input promoters and Rank-1 candidates, with the central track showing the maximum nucleotide-frequency change at each position. All values are computational prioritization outputs and do not establish experimentally validated tissue-specific expression.}
-\label{fig:main-results}
-\end{figure*}
 
 Historical model-specific results and their provenance are reported separately in the Supplementary Information and are not treated as an independent benchmark of the current package. Together, these results show that TPSGen links promoter characterization, candidate generation and tissue-bias prioritization through a reproducible output schema.
 

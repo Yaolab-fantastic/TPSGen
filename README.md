@@ -24,7 +24,7 @@ candidate generation and four-tissue score-based prioritization. The displayed
 scores and designed sequences are computational outputs and do not by
 themselves establish experimentally validated tissue-specific expression.
 
-![TPSGen framework overview](docs/fig/framework_v2.png)
+![TPSGen framework overview](docs/fig/framework.png)
 
 *TPSGen framework overview. DNABERT-derived evidence, preGAN fruit-guided
 generation and TransVAE-MLP four-tissue scoring are exposed as model-backed
@@ -41,14 +41,25 @@ source .venv/bin/activate
 pip install tpsgen-0.2.0-py3-none-any.whl
 ```
 
-The release wheel contains the paper-aligned Transformer-VAE checkpoint, the preGAN expression-constraint
-resource, the default training configuration and the example input.
+The release wheel contains the paper-aligned Transformer-VAE checkpoint, the
+DNABERT checkpoint, the preGAN generator and expression-constraint resources,
+the default training configuration and the example input. Because the DNABERT
+checkpoint is large, publication releases may distribute model resources
+separately from the base wheel; follow the resource location or download
+instructions for the specific release.
 Package-native commands do not require PyTorch. Install the optional model
 dependencies before running checkpoint-backed routes. From a published package
 index, use:
 
 ```bash
 pip install "tpsgen[models]"
+```
+
+For the DNABERT inference route, install the additional Transformers
+dependency:
+
+```bash
+pip install "tpsgen[dnabert]"
 ```
 
 From a local wheel file, use:
@@ -414,16 +425,23 @@ source tables are retained under `data/results/reproducible_legacy/`. Use
 
 | Command | Purpose |
 | --- | --- |
+| `run` | Run the integrated validation, annotation, design, scoring and reporting workflow |
 | `copy-example` | Copy the bundled demonstration FASTA to a user-selected path |
 | `validate-input` | Validate FASTA records and sequence symbols |
+| `extract-promoters` | Extract strand-aware 165-bp promoter windows from tomato genome and GFF3 files |
 | `annotate` | Scan promoter sequences for configured motif hits |
 | `predict` | Generate root, stem, leaf and fruit-associated scores |
 | `design` | Generate motif-aware candidate promoters |
 | `report` | Build a compact JSON design summary |
 | `figures` | Export lightweight figures from result CSV files |
-| `model-figures` | Reconstruct retained project model figure bundles |
+| `model-figures` | Optional manuscript-resource reconstruction command |
+| `validate-models` | Report the availability of bundled model resources and their CLI routes |
+| `validate-dnabert` | Validate matched DNABERT sequence and attention resources |
 | `annotate-dnabert` | Run project DNABERT-derived motif post-processing |
+| `predict-dnabert` | Run bundled DNABERT inference on 165-bp tomato promoter FASTA |
 | `predict-transvae` | Run the bundled TransVAE four-tissue checkpoint adapter |
+| `pregan-generate` | Generate candidates from masked templates with a compatible preGAN checkpoint |
+| `run-pregan` | Run preGAN generation followed by TransVAE scoring |
 
 `annotate-dnabert` converts matched precomputed DNABERT sequence and attention
 arrays into motif summaries. It is distinct from `predict-dnabert`, which runs
@@ -453,7 +471,7 @@ TPSGen/
 ├── examples/                       # runnable FASTA examples
 ├── data/                           # curated data and retained result resources
 ├── docs/                           # tool documentation and manuscript sources
-├── models/                         # bundled lightweight checkpoints and model manifest
+├── models/                         # bundled checkpoints and model resources
 ├── scripts/                        # data and result reproduction scripts
 └── tests/                          # unit and regression tests
 ```
@@ -475,7 +493,7 @@ Manuscript sources:
 ```text
 docs/application_note_submission.tex
 docs/application_note_supplement.tex
-docs/application_note_references.bib
+docs/references.bib
 ```
 
 ## Data And Model Boundary

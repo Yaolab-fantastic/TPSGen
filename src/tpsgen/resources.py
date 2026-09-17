@@ -13,7 +13,7 @@ def installed_resource_root() -> Path:
     override = os.environ.get("TPSGEN_RESOURCE_DIR")
     if override:
         return Path(override)
-    return Path(sysconfig.get_path("data")) / "share" / "tomato-promoter-designer"
+    return Path(sysconfig.get_path("data")) / "share" / "tpsgen"
 
 
 def find_example(name: str = "demo_input.fasta") -> Path:
