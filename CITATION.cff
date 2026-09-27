@@ -2,6 +2,7 @@ cff-version: 1.2.0
 title: "TPSGen: an integrated framework for motif-conditioned generation and tissue-bias prioritization of tomato promoters"
 message: "If you use this software, please cite this software release and the accompanying article when available."
 type: software
+
 authors:
   - family-names: Fan
     given-names: Zhoujie
@@ -25,8 +26,9 @@ authors:
     given-names: Cheng
   - family-names: Cong
     given-names: Shan
+
 license: MIT
-version: 0.2.0
+version: 1.0.0
 date-released: 2026-09-27
 abstract: "A package-first toolkit for motif-aware design of tissue-biased tomato promoter sequences."
 keywords:
