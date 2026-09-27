@@ -8,8 +8,8 @@
 \renewcommand{\thefigure}{S\arabic{figure}}\renewcommand{\thetable}{S\arabic{table}}\renewcommand*{\thesection}{S\arabic{section}}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \title{Supplementary Information for\\ ``TPSGen: an integrated framework for motif-conditioned generation and tissue-bias prioritization of tomato promoters''}
-\author{Zhoujie Fan, Xiaoyu Wang, Haimeng Zhang, Hao Meng, Hong Liang, Tong Zhang, \\
-Huazhu Fu, Ching-Yu Cheng, Weihua Pan, Xiaohui Yao*, Cheng Zhao*, Shan Cong*}
+\author{Zhoujie Fan, Xiaoyu Wang, Haimeng Zhang, Hao Meng, Tong Zhang, Huazhu Fu, \\
+Xiaohui Yao, Weihua Pan, Hong Liang*, Cheng Zhao*, Shan Cong*}
 
 \date{}
 \begin{document}\maketitle
@@ -85,7 +85,7 @@ The original interpretation workflow extracted token-level attention-derived evi
 The promoter profile showed a concentrated signal approximately 50--30 bp upstream of the project TSS reference, whereas the random-gene profile was more diffuse. This location is reported relative to the coordinate convention used in the original experiment. It should not be interpreted as a universally resolved core-promoter boundary, because gene start served as a TSS proxy and the source annotation did not provide experimentally mapped TSSs for every record. Attention-derived evidence indicates positions used by the classifier, but attention alone does not demonstrate transcription-factor occupancy or causal regulatory activity.
 
 \subsection{Motif summary and in-silico mutagenesis}
-High-evidence sequence segments were collected across promoter records and consolidated into model-derived recurrent motif-like patterns, subsequently termed motifs for brevity. The resulting summary included CTATT, ACTAA, ATCCA and TTTAT with 239, 188, 184 and 121 retained instances, respectively. These counts refer to retained model-derived sequence instances, not to numbers of experimentally validated transcription-factor binding sites.
+High-evidence sequence segments were collected across promoter records and consolidated into recurrent short sequence patterns. The resulting summary included CTATT, ACTAA, ATCCA and TTTAT with 239, 188, 184 and 121 retained instances, respectively. These counts refer to retained model-derived sequence instances, not to numbers of experimentally validated transcription-factor binding sites. The thresholds used for enrichment and similarity merging define model-derived motif evidence rather than experimentally confirmed motif occurrences.
 
 In-silico mutagenesis provided a second computational check on the high-evidence regions. Bases within selected regions were perturbed and the resulting change in masked-language-model loss was compared with the unperturbed sequence. A loss increase indicates that the trained sequence model found the original local context easier to explain than the perturbed context. This supports model-learned sequence constraint, but it does not identify the cognate transcription factor or establish promoter function in vivo.
 
@@ -93,7 +93,7 @@ For each recurrent pattern, the corresponding high-evidence segments were aligne
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{supp_fig1.png}
+\includegraphics[width=\textwidth]{supp_fig1}
 \caption{DNABERT pretraining, positional evidence, recurrent motif patterns and in-silico mutagenesis. (A) Masked-language-model pretraining loss for 4-mer, 5-mer and 6-mer tokenization. (B) Average attention-derived evidence across tomato promoter sequences and random gene sequences, shown relative to the project TSS coordinate proxy. (C) Sequence logos for recurrent model-derived patterns identified from high-evidence regions. (D) Retained computational mutagenesis result showing the change in model loss across the mutation index; the upper track indicates the critical and non-critical regions defined in the original analysis. These panels reproduce the DNABERT analyses from the original tomato promoter study. The attention, motif and mutagenesis signals represent model-derived sequence evidence and do not by themselves establish transcription-factor binding or promoter activity.}
 \label{fig:supp-dnabert}
 \end{figure}
@@ -141,7 +141,7 @@ For downstream prioritization, 20 generated candidates were sampled and scored f
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{supp_fig2.png}
+\includegraphics[width=\textwidth]{supp_fig2}
 \caption{preGAN-generated promoter sequence similarity, diversity and tissue-associated prioritization. (A) Correlation between 4-mer frequency distributions of natural and preGAN-generated promoters for the full 165-bp sequence, the first 20 bp and the last 20 bp. (B) Pairwise edit-distance distributions for random, natural and preGAN-generated sequences. (C) Tissue-associated index \(\tau\) for 20 generated candidates. (D) Computational tissue-associated scores for the same candidates across root, stem, leaf and fruit targets. The candidate scores and \(\tau\) values are computational prioritization outputs rather than experimentally measured expression values.}
 \label{fig:supp-pregan}
 \end{figure}
@@ -157,7 +157,7 @@ Non-masked-position retention & 99.55\% \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{supp_fig3.png}
+\includegraphics[width=\textwidth]{supp_fig3}
 \caption{Additional preGAN sequence-distribution and database-similarity comparisons. (A) PCC values between generated and natural promoter k-mer frequency distributions at 4-mer, 5-mer and 6-mer scales for WGAN, TransVAE-MLP and preGAN. (B) BLAST E-value distributions for natural, random, WGAN-generated, TransVAE-MLP-generated and preGAN-generated promoter sequences. These analyses evaluate sequence-distribution similarity and database similarity of the generated candidates; they do not constitute direct measurements of promoter function or tissue-specific activity.}
 \label{fig:supp-pregan-comparison}
 \end{figure}
@@ -186,7 +186,7 @@ The original configuration used three Transformer encoder layers, three decoder 
 \subsection{Prediction performance}
 Prediction performance was evaluated on the held-out test portion of the 14,071-record ITAG-MMNP2E experiment described in Section S1.2. For each target column, PCC was calculated between the predicted and processed reference values across test records. TransVAE-MLP reached PCC values of 0.77, 0.82, 0.79 and 0.78 for R85, S85, L85 and Br15, respectively. These correlations evaluate ranking agreement under the original sequence-level split. They do not measure absolute calibration, transfer to another tomato annotation release or generalization to experimentally synthesized candidates.
 
-The model-development study also compared several prediction architectures on the same project dataset. The pure Transformer comparator reported 0.81, 0.85, 0.78 and 0.82, whereas TransVAE-MLP reported the values above. TransVAE-MLP was retained not because it was uniformly superior as a standalone predictor, but because its latent representation and four-target scoring interface support the integrated workflow. The Application Note therefore does not claim a new state-of-the-art expression predictor.
+The thesis also compared several prediction architectures on the same project dataset. The pure Transformer comparator reported 0.81, 0.85, 0.78 and 0.82, whereas TransVAE-MLP reported the values above. This comparison indicates that TransVAE-MLP was not uniformly the strongest standalone regressor; its project role combined latent sequence modeling with four-target scoring. The Application Note therefore uses the model as a retained scoring component and does not claim a new state-of-the-art expression predictor.
 
 \subsection{Candidate score profiles and tissue-bias prioritization}
 The historical TransVAE design experiment searched its learned latent space and decoded selected latent representations into candidate promoter sequences. Twenty generated candidates were sampled for presentation and scored across the four project targets. Four had \(\tau>0.7\), 14 had \(0.5<\tau<0.7\), and two had \(0.4<\tau<0.5\). The associated candidate-by-target heatmap indicated that many displayed candidates had higher Br15-associated scores than their other three scores. Because the same project model family contributed to candidate generation and assessment, this was an internal computational characterization rather than an independent validation experiment.
@@ -199,7 +199,7 @@ and \(\tau\). A positive \(\Delta_t\) indicates that the requested target has th
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{supp_fig4.png}
+\includegraphics[width=\textwidth]{supp_fig4}
 \caption{TransVAE-MLP sequence-generation and tissue-associated scoring results. (A) Correlation between natural and TransVAE-MLP-generated 4-mer frequency distributions for the full 165-bp sequence, the first 20 bp and the last 20 bp. (B) PCC comparison between WGAN- and TransVAE-MLP-generated sequences across 4-mer, 5-mer and 6-mer frequency distributions. (C) Tissue-associated index \(\tau\) for 20 TransVAE-MLP-generated candidates. (D) Computational TransVAE-MLP scores for root, stem, leaf and fruit across the same candidates. Scores are model outputs on the project-defined targets and should not be interpreted as experimentally measured expression values.}
 \label{fig:supp-transvae}
 \end{figure}

@@ -11,23 +11,23 @@ authors:
     given-names: Haimeng
   - family-names: Meng
     given-names: Hao
-  - family-names: Liang
-    given-names: Hong
   - family-names: Zhang
     given-names: Tong
   - family-names: Fu
     given-names: Huazhu
-  - family-names: Cheng
-    given-names: Ching-Yu
   - family-names: Yao
     given-names: Xiaohui
+  - family-names: Pan
+    given-names: Weihua
+  - family-names: Liang
+    given-names: Hong
   - family-names: Zhao
     given-names: Cheng
   - family-names: Cong
     given-names: Shan
 license: MIT
 version: 0.2.0
-date-released: 2026-07-08
+date-released: 2026-09-27
 abstract: "A package-first toolkit for motif-aware design of tissue-biased tomato promoter sequences."
 keywords:
   - bioinformatics
