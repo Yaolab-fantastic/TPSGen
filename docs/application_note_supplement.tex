@@ -7,10 +7,12 @@
 \graphicspath{{fig/}}
 \renewcommand{\thefigure}{S\arabic{figure}}\renewcommand{\thetable}{S\arabic{table}}\renewcommand*{\thesection}{S\arabic{section}}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
-\title{Supplementary Information for\\ ``TPSGen: an integrated framework for motif-conditioned generation and tissue-bias prioritization of tomato promoters''}
-\author{Zhoujie Fan, Xiaoyu Wang, Haimeng Zhang, Hao Meng, Tong Zhang, Huazhu Fu, \\
-Xiaohui Yao, Weihua Pan, Hong Liang*, Cheng Zhao*, Shan Cong*}
-
+\title{Supplementary Information for\\ ``TPSGen: Motif-conditioned Design of Tomato
+Promoter Candidates for Tissue-biased Expression''}
+% \author{Zhoujie Fan, Xiaoyu Wang, Haimeng Zhang, Hao Meng, Tong Zhang, Huazhu Fu, \\
+% Xiaohui Yao, Weihua Pan, Hong Liang*, Cheng Zhao*, Shan Cong*}
+\author{Zhoujie Fan, Xiaoyu Wang, Haimeng Zhang, Tong Zhang, \\
+Xiaohui Yao, Weihua Pan, Hebing Chen, Hong Liang*, Cheng Zhao*, Shan Cong*}
 \date{}
 \begin{document}\maketitle
 \section{Data Sources and Evaluation Design}
@@ -184,7 +186,9 @@ The reconstruction term trained nucleotide recovery, the KL term regularized the
 The original configuration used three Transformer encoder layers, three decoder layers, four attention heads, batch size 128, 300 epochs, learning rate 0.0002 and weight decay 0.05. In the released scoring route, only the encoder-side representation and MLP head are required. The deterministic mean of the encoded latent distribution is used to produce one four-value score vector for each input sequence; stochastic decoding is not part of the released scoring command.
 
 \subsection{Prediction performance}
-Prediction performance was evaluated on the held-out test portion of the 14,071-record ITAG-MMNP2E experiment described in Section S1.2. For each target column, PCC was calculated between the predicted and processed reference values across test records. TransVAE-MLP reached PCC values of 0.77, 0.82, 0.79 and 0.78 for R85, S85, L85 and Br15, respectively. These correlations evaluate ranking agreement under the original sequence-level split. They do not measure absolute calibration, transfer to another tomato annotation release or generalization to experimentally synthesized candidates.
+Prediction performance in the original model-development experiment was evaluated on the held-out test portion of the 14,071-record ITAG-MMNP2E dataset described in Section S1.2. For each target column, PCC was calculated between the predicted and processed reference values across test records. TransVAE-MLP reached PCC values of 0.77, 0.82, 0.79 and 0.78 for R85, S85, L85 and Br15, respectively. These correlations evaluate ranking agreement under the original sequence-level split. They do not measure absolute calibration, transfer to another tomato annotation release or generalization to experimentally synthesized candidates.
+
+The validation visualization in Figure~2C,D uses the separate 3,703-record validation output associated with the released scoring checkpoint; these panels provide a reproducibility characterization of the scoring route and are reported separately from the original model-development split above.
 
 The thesis also compared several prediction architectures on the same project dataset. The pure Transformer comparator reported 0.81, 0.85, 0.78 and 0.82, whereas TransVAE-MLP reported the values above. This comparison indicates that TransVAE-MLP was not uniformly the strongest standalone regressor; its project role combined latent sequence modeling with four-target scoring. The Application Note therefore uses the model as a retained scoring component and does not claim a new state-of-the-art expression predictor.
 

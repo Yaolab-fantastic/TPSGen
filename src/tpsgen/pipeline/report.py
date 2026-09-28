@@ -75,7 +75,11 @@ def _target_margin(row: dict[str, str]) -> float:
     return target_score - max(competing_scores) if competing_scores else target_score
 
 
-def build_report(input_csv: str | Path, output_json: str | Path) -> dict[str, object]:
+def build_report(
+    input_csv: str | Path,
+    output_json: str | Path,
+    min_target_margin: float | None = None,
+) -> dict[str, object]:
     rows = read_dict_rows(input_csv)
     if not rows:
         raise ValueError("Input design table is empty.")
@@ -104,22 +108,43 @@ def build_report(input_csv: str | Path, output_json: str | Path) -> dict[str, ob
             display_status = _display_design_status(status)
             design_status_display_counts[display_status] = design_status_display_counts.get(display_status, 0) + 1
 
+    eligible_rows = (
+        [row for row in rows if _target_margin(row) >= min_target_margin]
+        if min_target_margin is not None
+        else rows
+    )
     best_rows_by_sequence: dict[str, dict[str, str]] = {}
-    for row in rows:
+    for row in eligible_rows:
         sequence_id = row["sequence_id"]
         existing = best_rows_by_sequence.get(sequence_id)
         if existing is None:
             best_rows_by_sequence[sequence_id] = row
             continue
-        current_margin = _target_margin(row)
-        best_margin = _target_margin(existing)
-        if current_margin > best_margin:
+        target_tissue = row["target_tissue"]
+        current_score = float(row[_score_column(row, target_tissue)])
+        best_score = float(existing[_score_column(existing, target_tissue)])
+        if current_score > best_score:
             best_rows_by_sequence[sequence_id] = row
-        elif current_margin == best_margin and int(row["candidate_rank"]) < int(existing["candidate_rank"]):
-            best_rows_by_sequence[sequence_id] = row
+        elif current_score == best_score:
+            current_margin = _target_margin(row)
+            best_margin = _target_margin(existing)
+            if current_margin > best_margin:
+                best_rows_by_sequence[sequence_id] = row
+            elif current_margin == best_margin and int(row["candidate_rank"]) < int(existing["candidate_rank"]):
+                best_rows_by_sequence[sequence_id] = row
+
+    missing_sequences = sorted(unique_sequences - set(best_rows_by_sequence))
+    if missing_sequences and min_target_margin is not None:
+        raise ValueError(
+            "No candidate meets the minimum target-bias margin "
+            f"({min_target_margin}) for input sequence(s): "
+            + ", ".join(missing_sequences)
+        )
 
     report = {
         "num_rows": len(rows),
+        "num_margin_eligible_rows": len(eligible_rows),
+        "min_target_margin": min_target_margin,
         "num_input_sequences": len(unique_sequences),
         "num_unique_designed_sequences": len({row["designed_sequence"] for row in rows if row.get("designed_sequence")}),
         "target_tissues": target_tissues,

@@ -25,6 +25,7 @@ def run_integrated_workflow(
     scoring_backend: str = "native",
     checkpoint_path: str | Path | None = None,
     motif_backend: str = "native",
+    min_target_margin: float | None = None,
 ) -> dict[str, object]:
     """Run the reproducible, one-command package workflow.
 
@@ -145,23 +146,48 @@ def run_integrated_workflow(
     render_design_summary(design_rows, figure_dir / "candidate_design_summary.svg")
 
     report_path = report_dir / "workflow_report.json"
-    report = build_report(design_path, report_path)
+    report = build_report(
+        design_path,
+        report_path,
+        min_target_margin=min_target_margin,
+    )
 
     original_by_id = {item.sequence_id: item for item in original_scores}
     best_by_id = {}
     for item in designs:
         candidate_id = f"{item.sequence_id}__candidate_{item.candidate_rank}"
         scored_candidate = candidate_score_by_id[candidate_id]
+        margin = getattr(scored_candidate, f"score_{target_tissue}") - max(
+            getattr(scored_candidate, f"score_{tissue}")
+            for tissue in ("root", "stem", "leaf", "fruit")
+            if tissue != target_tissue
+        )
+        if min_target_margin is not None and margin < min_target_margin:
+            continue
         current = best_by_id.get(item.sequence_id)
         if current is None:
             best_by_id[item.sequence_id] = (item, scored_candidate)
             continue
         _, current_score = current
-        if getattr(scored_candidate, f"score_{target_tissue}") > getattr(current_score, f"score_{target_tissue}"):
+        current_target = getattr(current_score, f"score_{target_tissue}")
+        candidate_target = getattr(scored_candidate, f"score_{target_tissue}")
+        current_margin = current_target - max(
+            getattr(current_score, f"score_{tissue}")
+            for tissue in ("root", "stem", "leaf", "fruit")
+            if tissue != target_tissue
+        )
+        if candidate_target > current_target or (
+            candidate_target == current_target and margin > current_margin
+        ):
             best_by_id[item.sequence_id] = (item, scored_candidate)
     summary_rows = []
     for record in records:
         original = original_by_id[record.sequence_id]
+        if record.sequence_id not in best_by_id and min_target_margin is not None:
+            raise ValueError(
+                "No candidate meets the minimum target-bias margin "
+                f"({min_target_margin}) for input sequence: {record.sequence_id}"
+            )
         best, best_score = best_by_id[record.sequence_id]
         summary_rows.append(
             {
@@ -197,6 +223,7 @@ def run_integrated_workflow(
             "alphabet": "A/C/G/T/N/M before validation; A/C/G/T for generated candidates",
         },
         "target_tissue": target_tissue,
+        "minimum_target_bias_margin": min_target_margin,
         "motif_backend": motif_backend,
         "candidates_per_input": candidates,
         "seed": seed,
@@ -223,7 +250,12 @@ def run_integrated_workflow(
                 "output": "scoring/*.csv",
                 "checkpoint_used": scoring_backend == "transvae",
                 "score_definition": "ranking score, not calibrated expression" if scoring_backend == "native" else "TransVAE four-tissue model score; scale is checkpoint-specific",
-                "final_candidate_selection": "best target-tissue score within each input promoter",
+                "final_candidate_selection": (
+                    "optional target-bias margin filter, then highest target-tissue "
+                    "score; use margin as the tie-breaker"
+                    if min_target_margin is not None
+                    else "highest target-tissue score; use target-bias margin as the tie-breaker"
+                ),
             },
         },
         "model_routes": {

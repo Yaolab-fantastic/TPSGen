@@ -140,10 +140,22 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--checkpoint", required=False, help="Optional TransVAE checkpoint for --scoring-backend transvae.")
     run.add_argument("--design-backend", choices=["native", "pregan"], default="native")
     run.add_argument("--motif-backend", choices=["native", "dnabert"], default="native")
+    run.add_argument(
+        "--min-target-margin",
+        type=float,
+        default=None,
+        help="Optional minimum target-bias margin required before candidate ranking.",
+    )
 
     report = subparsers.add_parser("report", help="Build a compact JSON report from a design CSV.")
     report.add_argument("--input", required=True, help="Input design CSV.")
     report.add_argument("--output", required=True, help="Output JSON.")
+    report.add_argument(
+        "--min-target-margin",
+        type=float,
+        default=None,
+        help="Optional minimum target-bias margin required before candidate ranking.",
+    )
 
     figures = subparsers.add_parser("figures", help="Export publication-style SVG figures from result CSV tables.")
     figures.add_argument("--input", required=True, help="Input CSV from predict, design, or motif summary.")
@@ -446,6 +458,7 @@ def main(argv: list[str] | None = None) -> int:
             scoring_backend=args.scoring_backend,
             checkpoint_path=args.checkpoint,
             motif_backend=args.motif_backend,
+            min_target_margin=args.min_target_margin,
         )
         print(json.dumps(manifest, indent=2))
         return 0
@@ -453,7 +466,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "report":
         from tpsgen.pipeline.report import build_report
 
-        report = build_report(args.input, args.output)
+        report = build_report(
+            args.input,
+            args.output,
+            min_target_margin=args.min_target_margin,
+        )
         print(json.dumps(report, indent=2))
         return 0
 
