@@ -16,6 +16,16 @@ from tpsgen.visualization.svg import (
 )
 
 
+def _compute_tau(values: dict[str, float]) -> tuple[float | None, str]:
+    """Compute tau only on the domain used by its stated interpretation."""
+    maximum = max(values.values())
+    if maximum <= 0:
+        return None, "maximum_score_must_be_positive"
+    if any(value < 0 for value in values.values()):
+        return None, "scores_must_be_non_negative"
+    return round(sum(1.0 - value / maximum for value in values.values()) / 3.0, 4), "valid"
+
+
 def run_integrated_workflow(
     records: list[SequenceRecord],
     target_tissue: str,
@@ -103,15 +113,12 @@ def run_integrated_workflow(
         values = {tissue: float(row[f"score_{tissue}"]) for tissue in ("root", "stem", "leaf", "fruit")}
         target_value = values[target_tissue]
         runner_up = max(value for tissue, value in values.items() if tissue != target_tissue)
-        maximum = max(values.values())
-        minimum = min(values.values())
-        # tau is a descriptive concentration index; retain the raw scores too.
+        tau, tau_status = _compute_tau(values)
+        # tau is a descriptive concentration index; retain raw scores and validity.
         row["target_tissue"] = target_tissue
         row["target_bias_margin"] = round(target_value - runner_up, 4)
-        row["tau"] = round(
-            sum(1.0 - value / maximum for value in values.values()) / 3.0,
-            4,
-        ) if maximum > 0 else None
+        row["tau"] = tau
+        row["tau_status"] = tau_status
         row["preferred_tissue"] = max(values, key=values.get)
         return row
 
@@ -236,6 +243,13 @@ def run_integrated_workflow(
                 "output": "motif/motif_annotations.csv",
                 "checkpoint_used": motif_backend == "dnabert",
                 "optional_dnabert_evidence": str(dnabert_path.relative_to(root)) if dnabert_path else None,
+                "used_to_construct_generation_template": False,
+                "information_flow_note": (
+                    "DNABERT evidence is reported as an auxiliary output in the "
+                    "package-native integrated route; use run_pregan_workflow "
+                    "for evidence-derived masked-template generation."
+                    if motif_backend == "dnabert" else None
+                ),
             },
             "candidate_generation": {
                 "name": "package_native_motif_preserving_design",
@@ -250,6 +264,12 @@ def run_integrated_workflow(
                 "output": "scoring/*.csv",
                 "checkpoint_used": scoring_backend == "transvae",
                 "score_definition": "ranking score, not calibrated expression" if scoring_backend == "native" else "TransVAE four-tissue model score; scale is checkpoint-specific",
+                "input_preprocessing": {
+                    "encoder_source_length": 164,
+                    "last_base_used_by_encoder": False,
+                    "mask_token_alias": "A (token 0)",
+                    "requires_training_match": True,
+                } if scoring_backend == "transvae" else None,
                 "final_candidate_selection": (
                     "optional target-bias margin filter, then highest target-tissue "
                     "score; use margin as the tie-breaker"
@@ -277,7 +297,7 @@ def run_integrated_workflow(
             "transvae": {
                 "status": "available_as_optional_scoring_backend",
                 "not_used_by_default_run": scoring_backend != "transvae",
-                "resource": "models/transvae/best_val_corr_model.pth",
+                "resource": "models/transvae/full_length_joint_model.pth",
             },
         },
         "files": {

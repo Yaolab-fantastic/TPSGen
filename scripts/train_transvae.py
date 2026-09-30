@@ -8,7 +8,9 @@ from tpsgen.training.transvae import load_training_config, train_transvae
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Train the TomatoPromoterDesigner TransVAE model.")
+    parser = argparse.ArgumentParser(
+        description="Train the recovered Transformer-VAE/MLP joint objective."
+    )
     parser.add_argument("--config", default="configs/training_transvae.yaml", help="Training config path.")
     parser.add_argument("--input-csv", help="Override training CSV path.")
     parser.add_argument("--output-checkpoint", help="Override output checkpoint path.")

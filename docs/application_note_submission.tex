@@ -1,15 +1,15 @@
 %\documentclass[numsec,webpdf,modern,large,numbered]{oup-authoring-template}
 \documentclass[numsec,webpdf,modern,large]{oup-authoring-template}
 
-\graphicspath{{fig/}}
-
 \usepackage{float}
 \usepackage{graphicx}
+\graphicspath{{fig/}}
 \usepackage{array}
 \usepackage{booktabs}
 \usepackage{hyperref}
 \hypersetup{hidelinks}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\providecommand{\ORCID}[1]{}
 
 \begin{document}
 
@@ -69,7 +69,7 @@ Shan Cong (\href{mailto:shan.cong@hrbeu.edu.cn}{shan.cong@hrbeu.edu.cn})}
 
 \abstract{
 % Application Note 的 Summary 要快速说明工具解决什么问题、整合哪些功能、为什么是软件框架；不要展开算法细节，也不要声称新模型或性能最优。
-\textbf{Summary:} Designing promoters for tissue-biased expression requires assessing target-tissue preference rather than expression strength alone. TPSGen is a Python framework that combines motif-conditioned candidate construction with cross-tissue scoring for tomato promoter design. It uses motif evidence to constrain sequence modifications, evaluates input and designed sequences using root-, stem-, leaf- and fruit-associated scores, and ranks candidates by the requested target-tissue score while reporting a target-bias margin relative to the strongest non-target tissue. Candidate sequences, motif annotations and tissue-associated scores are reported together with run provenance, providing a reproducible workflow for selecting promoter candidates for experimental evaluation.\\
+\textbf{Summary:} Designing promoters for tissue-biased expression requires comparing activity across target and non-target tissues. TPSGen is a Python framework that combines motif-conditioned candidate construction with cross-tissue scoring for tomato promoter design. It uses motif evidence to constrain sequence modifications, scores input and designed sequences across root, stem, leaf and fruit, and prioritizes candidates using target-tissue scores and tissue-bias margins. The framework provides candidate sequences, motif annotations and tissue-score profiles to support candidate selection for experimental evaluation.\\
 % Availability 部分只写实现语言、安装方式、代码位置和许可；这是 Bioinformatics Application Note 审稿人首先检查的软件可用性信息。
 \textbf{Availability and Implementation:} TPSGen is implemented in Python and distributed as an installable command-line package. Source code, documentation and example workflows are freely available under the MIT license at \url{https://github.com/Yaolab-fantastic/TPSGen}.\\
 % \textbf{Contact:} \href{mailto:shan.cong@hrbeu.edu.cn}{shan.cong@hrbeu.edu.cn}.\\
@@ -81,47 +81,13 @@ Shan Cong (\href{mailto:shan.cong@hrbeu.edu.cn}{shan.cong@hrbeu.edu.cn})}
 \maketitle
 
 \section{Introduction}
-Engineering promoter sequences can tune gene expression and generate useful
-quantitative trait variation in crops, as demonstrated by promoter editing
-in tomato \citep{RodriguezLeal2017Engineering}. Studies of minimal and core
-plant promoters have also identified sequence features that support the
-design of promoters with different activities
-\citep{Cai2020Minimal,Jores2021Synthetic}. For tissue-directed applications,
-promoter selection must consider where expression occurs as well as its
-strength: a candidate intended for fruit-focused expression should favor
-fruit relative to vegetative tissues. Selecting candidates for this purpose
-therefore requires an assessment of expression patterns across tissues.
+Engineering promoter sequences can tune gene expression and generate useful quantitative trait variation in crops, as demonstrated by promoter editing in tomato \citep{RodriguezLeal2017Engineering}. Studies of minimal and core plant promoters have also identified sequence features that support the design of promoters with different activities \citep{Cai2020Minimal,Jores2021Synthetic}. For tissue-directed applications, promoter selection must consider where expression occurs as well as its strength: a candidate intended for fruit-focused expression should favor fruit relative to vegetative tissues.
 
-Sequence-to-expression models have enabled prediction of plant transcript
-abundance from regulatory DNA \citep{Washburn2019Evolutionarily}, while PhytoExpr extends this approach to computational searches for functional regulatory variants and species-specific regulatory sequences
-\citep{Li2024PhytoExpr}. Complementary approaches introduce sequence
-constraints or streamline the design process: DeepSEED conditions
-flanking-sequence generation on predefined cis-regulatory elements
-\citep{Zhang2023DeepSEED}, and GPro combines generation, prediction and
-optimization within a common toolkit \citep{Wang2024GPro}. Beyond activity
-tuning, deep-learning approaches have enabled cell-type- and tissue-directed
-enhancer design in animal systems
-\citep{Taskiran2024Enhancers,deAlmeida2024Enhancers,Gosai2024MachineGuided}.
+Sequence-to-expression models have enabled prediction of plant transcript abundance from regulatory DNA \citep{Washburn2019Evolutionarily}, while PhytoExpr extends this approach to computational searches for functional regulatory variants and species-specific regulatory sequences \citep{Li2024PhytoExpr}. DeepSEED conditions flanking-sequence generation on predefined cis-regulatory elements \citep{Zhang2023DeepSEED}, and GPro combines generation, prediction and optimization within a common toolkit \citep{Wang2024GPro}. Beyond activity tuning, deep-learning approaches have enabled cell-type- and tissue-directed enhancer design in animal systems \citep{Taskiran2024Enhancers,deAlmeida2024Enhancers,Gosai2024MachineGuided}.
 
-However, the output used to guide candidate selection must match the
-intended tissue preference. In PlantCRE, for example, the
-sequence-to-expression predictor summarizes expression by its maximum
-across tissues rather than returning a tissue-resolved profile
-\citep{Qiu2025PlantCRE}. This type of summary cannot, by itself,
-distinguish a fruit-biased candidate from one predicted to be active across
-several organs. More generally, promoter design for tissue preference requires
-scoring criteria that explicitly compare target and non-target tissues. For
-tomato promoter design, this motivates linking motif-conditioned candidate construction to separate root-, stem-, leaf- and fruit-associated scores and an explicit target-versus-non-target
-ranking criterion. This connection allows sequence constraints and
-predicted tissue bias to be considered together when selecting candidates.
+However, the output used to guide candidate selection must match the intended tissue preference. In PlantCRE, for example, the sequence-to-expression predictor summarizes expression by its maximum across tissues rather than returning a tissue-resolved profile \citep{Qiu2025Plasticity}. This type of summary cannot, by itself, distinguish a fruit-biased candidate from one predicted to be active across several organs. More generally, promoter design for tissue preference requires scoring criteria that explicitly compare target and non-target tissues. For tomato promoter design, this motivates linking motif-conditioned candidate construction to separate root-, stem-, leaf- and fruit-associated scores and an explicit target-versus-non-target ranking criterion. This connection allows sequence constraints and predicted tissue bias to be considered together when selecting candidates.
 
-Here, we present TPSGen, a Python framework for motif-conditioned design
-of tomato promoter candidates for tissue-biased expression. TPSGen uses
-motif evidence to constrain sequence modifications, evaluates input and
-designed sequences using four tissue-associated scores, and ranks
-candidates according to target-tissue-associated scores while reporting a target-tissue bias measure. Candidate sequences,
-motif annotations, tissue-associated scores and run provenance are
-reported together to support reproducible selection of candidates for experimental evaluation.
+Here, we present TPSGen, a Python framework for motif-conditioned design of tomato promoter candidates for tissue-biased expression. TPSGen uses motif evidence to constrain sequence modifications, evaluates input and designed sequences using four tissue-associated scores, and ranks candidates according to target-tissue-associated scores while reporting a target-tissue bias measure. Candidate sequences, motif annotations, tissue-associated scores and run provenance are reported together to support reproducible selection of candidates for experimental evaluation.
 
 \begin{figure*}[t]
 \centering
@@ -176,7 +142,7 @@ TPSGen provides a computational framework for motif-conditioned design of tomato
 
 \section*{Author contributions}
 
-Z.F. and X.W. led the framework organization, software implementation, computational analyses and initial manuscript preparation. H.Z., T.Z., X.Y. and W.P. contributed to software development, data organization or computational analysis. H.L., C.Z. and S.C. provided supervision, scientific interpretation and substantial manuscript revision. All authors reviewed and approved the final manuscript.
+Z.F. and X.W. led the framework organization, software implementation, computational analyses and initial manuscript preparation. H.Z., T.Z., X.Y., H.C. and W.P. contributed to software development, data organization or computational analysis. H.L., C.Z. and S.C. provided supervision, scientific interpretation and substantial manuscript revision. All authors reviewed and approved the final manuscript.
 
 \section*{Supplementary data}
 

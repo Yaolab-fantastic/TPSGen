@@ -29,7 +29,7 @@ Expression measurements were obtained from the MicroTom metabolic network (MMN),
 
 The promoter table and the MMN expression table were joined by their shared gene identifiers. Records without a valid promoter sequence or a matching expression record were excluded. The four selected expression columns were then transformed with \(\log(1+x)\) to reduce the dynamic range while retaining zero-valued measurements. After transformation, values below 0.01 were set to zero and the remaining values were rounded to three decimal places. The project also removed 2,966 genes whose values were zero in all four selected tissues, because these records provide no tissue-associated signal for supervised learning. The resulting ITAG-MMNP2E resource contained 14,071 promoter--target records, each consisting of one 165-bp sequence and four processed target values. This is the post-matching, post-quality-control total used in the original experiment; the available project description does not provide a complete count for every intermediate exclusion category. The data definitions and their roles are summarized in Table~\ref{tab:data-resources}.
 
-For the TransVAE-MLP model-development experiment, the 14,071 records were randomly divided at the sequence level into 11,257 training, 1,404 validation and 1,407 test records. The validation set was used for model selection and the test set for prediction assessment. This split defines the computational evaluation reported here; it is not an independent external test set or a substitute for biological validation.
+For the TransVAE-MLP model-development experiment, the 14,071 records were randomly divided at the sequence level into 11,257 training, 1,407 validation and 1,407 test records. The validation set was used for model selection and the test set for prediction assessment. This split defines the computational evaluation reported here; it is not an independent external test set or a substitute for biological validation.
 
 \begin{table}[H]
 \centering
@@ -211,7 +211,7 @@ and \(\tau\). A positive \(\Delta_t\) indicates that the requested target has th
 \begin{table}[H]\centering
 \caption{Reported TransVAE-MLP experiment settings and scoring results.}\label{tab:transvae-results}
 \begin{tabular}{L{0.46\textwidth}L{0.34\textwidth}}\toprule Item & Reported value \\\midrule
-Training/validation/test records & 11,257 / 1,404 / 1,407 \\
+Training/validation/test records & 11,257 / 1,407 / 1,407 \\
 Encoder/decoder layers; attention heads & 3/3; 4 heads \\
 Batch size; epochs; learning rate & 128; 300; 0.0002 \\
 PCC for R85/S85/L85/Br15 & 0.77 / 0.82 / 0.79 / 0.78 \\

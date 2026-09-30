@@ -410,24 +410,82 @@ class ExpressionPredictor(nn.Module):
 
 
 class TransVAEMLP(nn.Module):
-    def __init__(self, config: TransVAEConfig | None = None) -> None:
+    def __init__(self, config: TransVAEConfig | None = None, input_policy: str = "legacy_checkpoint") -> None:
         super().__init__()
         self.config = config or TransVAEConfig()
+        if input_policy not in {"legacy_checkpoint", "full_length"}:
+            raise ValueError("input_policy must be 'legacy_checkpoint' or 'full_length'.")
+        self.input_policy = input_policy
         self.transvae = TransformerVAE(self.config)
         self.vocab_to_base = nn.Linear(self.config.output_vocabulary_size, 4)
         self.predictor = ExpressionPredictor(self.config.latent_dimension)
+
+    @staticmethod
+    def prepare_compatibility_inputs(tokens: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Build the source sequence and historical A-as-padding mask.
+
+        This policy is shared by scoring and joint training. It is retained for
+        checkpoint compatibility; a corrected vocabulary/padding policy would
+        require retraining and must not silently reuse the old checkpoint.
+        """
+        if tokens.ndim != 2 or tokens.size(1) != 165:
+            raise ValueError("TransVAE inputs must have shape [batch, 165].")
+        source = tokens[:, :-1]
+        source_mask = (source != DNA_TO_TOKEN["A"]).unsqueeze(-2)
+        return source, source_mask
+
+    @staticmethod
+    def prepare_full_length_inputs(tokens: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Use all 165 bases with no nucleotide aliased to padding."""
+        if tokens.ndim != 2 or tokens.size(1) != 165:
+            raise ValueError("TransVAE inputs must have shape [batch, 165].")
+        return tokens, torch.ones(tokens.size(0), 1, tokens.size(1), dtype=torch.bool, device=tokens.device)
+
+    def prepare_inputs(self, tokens: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        if self.input_policy == "full_length":
+            return self.prepare_full_length_inputs(tokens)
+        return self.prepare_compatibility_inputs(tokens)
 
     def score_tokens(self, tokens: torch.Tensor) -> torch.Tensor:
         if tokens.ndim != 2 or tokens.size(1) != self.config.sequence_length:
             raise ValueError(
                 "TransVAE-MLP scoring expects a two-dimensional [batch, 165] token tensor."
             )
-        source = tokens[:, :-1]
-        # Compatibility behavior: the retained wrapper used token 0 for both A and padding.
-        source_mask = (source != DNA_TO_TOKEN["A"]).unsqueeze(-2)
+        source, source_mask = self.prepare_inputs(tokens)
         mean, _ = self.transvae.encode_distribution(source, source_mask)
         representation = self.transvae.encoder.prediction_representation(mean)
         return self.predictor(representation)
+
+    def joint_forward(self, tokens: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Run the historical teacher-forced Transformer-VAE path."""
+        if tokens.ndim != 2 or tokens.size(1) != self.config.sequence_length:
+            raise ValueError("joint_forward expects [batch, 165] token tensors.")
+        source, source_mask = self.prepare_inputs(tokens)
+        target = tokens[:, :-1] if self.input_policy == "full_length" else tokens[:, 1:]
+        target_mask = (target != DNA_TO_TOKEN["A"]).unsqueeze(-2)
+        memory, mean, logvar, _ = self.transvae.encoder(
+            self.transvae.src_embed(source), source_mask
+        )
+        decoded = self.transvae.decoder(
+            self.transvae.tgt_embed(target), memory, source_mask, target_mask
+        )
+        logits = self.transvae.generator(decoded)
+        return logits, mean, logvar, self.predictor(
+            self.transvae.encoder.prediction_representation(mean)
+        )
+
+    @staticmethod
+    def input_compatibility_metadata() -> dict[str, object]:
+        """Describe retained checkpoint preprocessing without endorsing it scientifically."""
+        return {
+            "input_length_bp": 165,
+            "encoder_source_length": 164,
+            "last_base_used_by_encoder": False,
+            "token_mapping": dict(DNA_TO_TOKEN),
+            "mask_token_alias": "A (token 0)",
+            "mask_semantics": "historical compatibility behavior; A positions are masked as keys",
+            "requires_training_match": True,
+        }
 
 
 def fruit_bias_fitness(

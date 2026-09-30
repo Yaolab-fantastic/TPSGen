@@ -53,8 +53,9 @@ it is a reproducibility entry point, not a replacement for the retained
 paper checkpoint or a hyperparameter benchmark. The bundled paper-aligned
 checkpoint is intended for routine `predict-transvae` use.
 
-Use `models/transvae/best_val_corr_model.pth` for the released paper-aligned
-Transformer-VAE scoring route.
+The legacy checkpoint that used a truncated encoder input and A-as-padding was
+removed from the release. Train `models/transvae/full_length_joint_model.pth`
+with the default configuration before enabling checkpoint-backed scoring.
 
 ## Smoke Test
 
@@ -70,17 +71,21 @@ Transformer-VAE checkpoint.
 
 ## Training Objective
 
-The training loop optimizes the four-tissue supervised score loss:
+The paper-compatible training loop optimizes:
 
 ```text
-total loss = prediction_weight * four-tissue score regression loss
+total loss = reconstruction + beta * KL + prediction + differentiable 3-mer
 ```
 
-The predictor learns four continuous tissue-associated scores from the Transformer-VAE latent representation. Sequence decoding is not part of this released training entry point.
+The predictor learns four continuous tissue-associated scores while the decoder
+reconstructs the full 165-bp input. The 3-mer term compares expected soft
+3-mer distributions and backpropagates through the decoder.
 
 ## Notes
 
-The bundled checkpoint in `models/transvae/best_val_corr_model.pth` is provided so users can run the model-backed scoring route immediately. The training script documents how a compatible scoring checkpoint can be regenerated or replaced with a newly trained checkpoint using the same architecture and output format.
+No TransVAE checkpoint is bundled until the corrected full-length joint model
+has been trained and validated. The training script writes explicit objective
+and input-policy metadata for that validation step.
 
 ## preGAN Smoke Training
 

@@ -1,13 +1,13 @@
 # Models
 
-This directory contains the bundled model resources used by the
-released TransVAE and preGAN-related routes.
+This directory contains model resources used by the released DNABERT and
+preGAN routes. A corrected full-length TransVAE checkpoint is not bundled yet.
 
 ## Bundled Resources
 
 | Path | Used by | Notes |
 | --- | --- | --- |
-| `models/transvae/best_val_corr_model.pth` | `predict-transvae` | Paper-aligned tomato Transformer-VAE plus four-tissue MLP scoring checkpoint for 165-bp promoters. |
+| `models/transvae/full_length_joint_model.pth` | `predict-transvae` | Expected output of the corrected full-length joint training route; not bundled until retraining is completed. |
 | `models/dnabert/` | `predict-dnabert` | Tomato fine-tuned 6-mer DNABERT checkpoint and tokenizer resources for fresh FASTA inference. |
 | `models/pregan/generator_checkpoint.pt` | `pregan-generate` and `run --design-backend pregan` | Local conditional-generator checkpoint trained on the retained tomato paired table; historical quantitative reproducibility has not been independently established and candidates require external validation. |
 | `models/pregan_expression/165_mpra_expr_denselstm.pth` | preGAN training smoke test | DenseLSTM scalar-expression checkpoint used as the frozen expression-constraint scorer in the preGAN training-plumbing test. |
@@ -37,7 +37,7 @@ tpsgen predict
 tpsgen design
 ```
 
-The bundled TransVAE checkpoint is used only by the explicit model command:
+The corrected TransVAE checkpoint, once trained, will be used only by the explicit model command:
 
 ```bash
 tpsgen predict-transvae

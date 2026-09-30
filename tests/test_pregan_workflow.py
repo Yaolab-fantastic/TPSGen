@@ -12,7 +12,8 @@ class TestPreGANWorkflow(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         checkpoint = root / "models" / "pregan" / "generator_checkpoint.pt"
         dnabert = root / "models" / "dnabert" / "pytorch_model.bin"
-        if not checkpoint.exists() or not dnabert.exists():
+        transvae = root / "models" / "transvae" / "full_length_joint_model.pth"
+        if not checkpoint.exists() or not dnabert.exists() or not transvae.exists():
             self.skipTest("required model checkpoints are not present")
         template = "M" * 12 + "A" * 153
         with tempfile.TemporaryDirectory() as directory:
@@ -22,10 +23,14 @@ class TestPreGANWorkflow(unittest.TestCase):
             )
             self.assertEqual(manifest["motif_backend"], "dnabert")
             self.assertTrue((Path(directory) / "dnabert_attention_evidence.csv").exists())
+            self.assertTrue((Path(directory) / "pregan_masked_templates.csv").exists())
+            self.assertTrue(manifest["information_flow"]["dnabert_evidence_to_masked_template"])
+            self.assertTrue(manifest["information_flow"]["masked_template_to_pregan"])
     def test_workflow_writes_candidates_and_scores(self) -> None:
         root = Path(__file__).resolve().parents[1]
         checkpoint = root / "models" / "pregan" / "generator_checkpoint.pt"
-        if not checkpoint.exists():
+        transvae = root / "models" / "transvae" / "full_length_joint_model.pth"
+        if not checkpoint.exists() or not transvae.exists():
             self.skipTest("trained preGAN checkpoint is not present")
         template = "M" * 12 + "A" * 153
         with tempfile.TemporaryDirectory() as directory:

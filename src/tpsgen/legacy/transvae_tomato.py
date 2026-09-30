@@ -43,7 +43,7 @@ def _default_models_dir() -> Path:
     return Path.cwd() / "models"
 
 
-DEFAULT_TRANSVAE_CHECKPOINT = _default_models_dir() / "transvae" / "best_val_corr_model.pth"
+DEFAULT_TRANSVAE_CHECKPOINT = _default_models_dir() / "transvae" / "full_length_joint_model.pth"
 
 _TATA_PATTERN = re.compile(r"TATA[AT]A[AT]")
 TOMATO_GC_RANGE = (0.12, 0.52)

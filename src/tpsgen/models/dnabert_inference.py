@@ -15,6 +15,31 @@ def spaced_kmers(sequence: str, k: int = 6) -> str:
     return " ".join(sequence[index : index + k] for index in range(len(sequence) - k + 1))
 
 
+def evidence_to_masked_template(
+    sequence: str, evidence_row: dict[str, object], top_fraction: float = 0.2,
+) -> tuple[str, list[int]]:
+    """Convert base-level DNABERT evidence into a preGAN condition template.
+
+    The highest-evidence positions are retained; all other positions become ``M``.
+    This is an explicit operational threshold, not a claim of experimentally
+    validated binding.
+    """
+    normalized = sequence.strip().upper()
+    if len(normalized) != 165 or set(normalized) - set("ACGTM"):
+        raise ValueError("Template conversion requires a 165-bp A/C/G/T/M sequence.")
+    if not 0 < top_fraction <= 1:
+        raise ValueError("top_fraction must be in (0, 1].")
+    raw = str(evidence_row.get("base_evidence", ""))
+    scores = [float(value) for value in raw.split(";") if value != ""]
+    if len(scores) != len(normalized):
+        raise ValueError("base_evidence length does not match sequence length.")
+    keep_count = max(1, int(np.ceil(len(scores) * top_fraction)))
+    retained = sorted(np.argsort(np.asarray(scores))[-keep_count:].tolist())
+    retained_set = set(retained)
+    template = "".join(base if index in retained_set and base != "M" else "M" for index, base in enumerate(normalized))
+    return template, retained
+
+
 class DNABERTTomatoAdapter:
     """Run the bundled tomato fine-tuned DNABERT and aggregate attention."""
 

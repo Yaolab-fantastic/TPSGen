@@ -5,8 +5,8 @@
 input_csv: data/raw/transvae/training_set.csv
 sequence_column: realB
 tissue_columns: [expr_tissue_1, expr_tissue_2, expr_tissue_3, expr_tissue_4]
-output_checkpoint: models/transvae/trained_transvae_model.pth
-metrics_json: models/transvae/trained_transvae_metrics.json
+output_checkpoint: models/transvae/full_length_joint_model.pth
+metrics_json: models/transvae/full_length_joint_metrics.json
 sequence_length: 165
 latent_dim: 128
 batch_size: 64
@@ -17,3 +17,8 @@ seed: 42
 prediction_weight: 1.0
 max_rows: null
 device: cpu
+# Use the recovered Transformer-VAE joint objective described in the paper.
+training_mode: paper_joint
+input_policy: full_length
+trimer_weight: 0.1
+warmup_epochs: 10

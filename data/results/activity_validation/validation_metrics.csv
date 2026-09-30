@@ -1,0 +1,5 @@
+tissue,observed_column,predicted_column,n,pearson_r,r_squared
+root,expr_tissue_1,score_root,3703,0.780106,0.608565
+stem,expr_tissue_2,score_stem,3703,0.823665,0.678424
+leaf,expr_tissue_3,score_leaf,3703,0.801869,0.642994
+fruit,expr_tissue_4,score_fruit,3703,0.792406,0.627907

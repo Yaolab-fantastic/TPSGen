@@ -262,7 +262,7 @@ def main(argv: list[str] | None = None) -> int:
 
         repo_root = repository_root()
         model_root = repo_root / "models"
-        transvae = model_root / "transvae" / "best_val_corr_model.pth"
+        transvae = model_root / "transvae" / "full_length_joint_model.pth"
         dnabert = model_root / "dnabert" / "pytorch_model.bin"
         pregan_generator = model_root / "pregan" / "generator_checkpoint.pt"
         pregan = model_root / "pregan_expression" / "165_mpra_expr_denselstm.pth"
@@ -432,6 +432,13 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "run":
         from tpsgen.pipeline.integrated import run_integrated_workflow
+
+        if args.design_backend == "native" and args.motif_backend == "dnabert":
+            parser.error(
+                "--motif-backend dnabert requires --design-backend pregan so "
+                "DNABERT evidence is converted into the preGAN masked template. "
+                "The native route only reports auxiliary evidence."
+            )
 
         if args.design_backend == "pregan":
             if not args.checkpoint:

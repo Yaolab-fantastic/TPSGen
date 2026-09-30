@@ -20,11 +20,42 @@ def run_pregan_workflow(
     root = Path(output_dir)
     root.mkdir(parents=True, exist_ok=True)
     motif_file = None
+    templates = [record.sequence for record in records]
+    retained_positions: dict[str, list[int]] = {}
     if motif_backend not in {"native", "dnabert"}:
         raise ValueError(f"Unsupported motif backend: {motif_backend}")
-    rows = generate_pregan_candidates(
-        [record.sequence for record in records], checkpoint, candidates, seed
-    )
+    if motif_backend == "dnabert":
+        from tpsgen.models.dnabert_inference import DNABERTTomatoAdapter, evidence_to_masked_template
+        from tpsgen.resources import find_model
+        adapter = DNABERTTomatoAdapter(find_model("dnabert/pytorch_model.bin").parent)
+        # DNABERT accepts only unambiguous DNA. Existing masked templates are
+        # therefore completed with deterministic A placeholders for evidence
+        # extraction; the original M positions remain editable in preGAN.
+        evidence_records = [
+            SequenceRecord(record.sequence_id, record.sequence.replace("M", "A"))
+            for record in records
+        ]
+        evidence = adapter.predict(evidence_records)
+        evidence_by_id = {str(row["sequence_id"]): row for row in evidence}
+        converted = []
+        for record in records:
+            template, positions = evidence_to_masked_template(record.sequence, evidence_by_id[record.sequence_id])
+            converted.append(template)
+            retained_positions[record.sequence_id] = positions
+        templates = converted
+    template_rows = [
+        {
+            "sequence_id": record.sequence_id,
+            "source_sequence": record.sequence,
+            "masked_template": template,
+            "retained_positions": ";".join(str(position) for position in retained_positions.get(record.sequence_id, [])),
+            "template_backend": "dnabert_attention_top_fraction" if motif_backend == "dnabert" else "user_supplied",
+        }
+        for record, template in zip(records, templates)
+    ]
+    template_path = root / "pregan_masked_templates.csv"
+    write_dict_rows(template_rows, template_path)
+    rows = generate_pregan_candidates(templates, checkpoint, candidates, seed)
     expanded = [record for record in records for _ in range(candidates)]
     for row, record in zip(rows, expanded):
         row["sequence_id"] = record.sequence_id
@@ -37,12 +68,7 @@ def run_pregan_workflow(
         candidate_fasta,
     )
     if motif_backend == "dnabert":
-        from tpsgen.models.dnabert_inference import DNABERTTomatoAdapter
         motif_file = root / "dnabert_attention_evidence.csv"
-        from tpsgen.resources import find_model
-        evidence = DNABERTTomatoAdapter(
-            find_model("dnabert/pytorch_model.bin").parent
-        ).predict([SequenceRecord(str(row["candidate_id"]), str(row["sequence"])) for row in rows])
         write_dict_rows(evidence, motif_file)
     scored = run_transvae_prediction(
         [SequenceRecord(str(row["candidate_id"]), str(row["sequence"])) for row in rows]
@@ -81,6 +107,12 @@ def run_pregan_workflow(
         "seed": seed,
         "target_tissue": target_tissue,
         "motif_backend": motif_backend,
+        "dnabert_template_policy": {
+            "top_fraction": 0.2,
+            "evidence_placeholder_for_input_M": "A",
+            "retained_positions_by_input": retained_positions,
+            "masked_symbol": "M",
+        } if motif_backend == "dnabert" else None,
         "backends": {
             "design": "pregan_conditional_generator",
             "scoring": "tomato_transvae_mlp_checkpoint_scoring",
@@ -91,6 +123,12 @@ def run_pregan_workflow(
             "candidates_fasta": candidate_fasta.name,
             "candidate_scores": score_path.name,
             "motif_evidence": motif_file.name if motif_file else None,
+            "masked_templates": template_path.name,
+        },
+        "information_flow": {
+            "dnabert_evidence_to_masked_template": motif_backend == "dnabert",
+            "masked_template_to_pregan": True,
+            "pregan_to_transvae_scoring": True,
         },
         "num_input_templates": len(records),
         "num_candidates": len(rows),

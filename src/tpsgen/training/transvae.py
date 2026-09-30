@@ -17,6 +17,24 @@ from tpsgen.models.transvae_mlp import (
 )
 
 
+def differentiable_trimer_loss(reconstructed: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    """Compare expected 3-mer distributions while retaining decoder gradients."""
+    if reconstructed.shape != target.shape or reconstructed.ndim != 3 or reconstructed.size(-1) != 4:
+        raise ValueError("reconstructed and target must both have shape [batch, length, 4].")
+    if reconstructed.size(1) < 3:
+        raise ValueError("At least three sequence positions are required for 3-mer loss.")
+
+    def distribution(values: torch.Tensor) -> torch.Tensor:
+        expected = (
+            values[:, :-2, :, None, None]
+            * values[:, 1:-1, None, :, None]
+            * values[:, 2:, None, None, :]
+        )
+        return expected.reshape(-1, 64).mean(dim=0)
+
+    return F.l1_loss(distribution(reconstructed), distribution(target), reduction="sum")
+
+
 @dataclass
 class TrainingConfig:
     input_csv: str = "data/raw/transvae/training_set.csv"
@@ -41,6 +59,10 @@ class TrainingConfig:
     kl_weight: float = 0.001
     max_rows: int | None = None
     device: str = "cpu"
+    training_mode: str = "paper_joint"
+    input_policy: str = "full_length"
+    trimer_weight: float = 0.1
+    warmup_epochs: int = 10
 
 
 class TransVAEDataset(Dataset[tuple[torch.Tensor, torch.Tensor]]):
@@ -119,6 +141,12 @@ def _parse_scalar(value: str) -> object:
 
 
 def train_transvae(config: TrainingConfig) -> dict[str, object]:
+    if config.training_mode not in {"prediction_only_scaffold", "paper_joint"}:
+        raise ValueError(
+            "Only training_mode=prediction_only_scaffold is implemented in the "
+            "released package; the paper's joint VAE objective requires the "
+            "original training sources and checkpoint-matched preprocessing."
+        )
     random.seed(config.seed)
     torch.manual_seed(config.seed)
     device = torch.device(config.device)
@@ -145,7 +173,7 @@ def train_transvae(config: TrainingConfig) -> dict[str, object]:
         else None
     )
 
-    model = TransVAEMLP().to(device)
+    model = TransVAEMLP(input_policy=config.input_policy).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
 
     history: list[dict[str, float]] = []
@@ -154,8 +182,8 @@ def train_transvae(config: TrainingConfig) -> dict[str, object]:
     output_checkpoint.parent.mkdir(parents=True, exist_ok=True)
 
     for epoch in range(1, config.epochs + 1):
-        train_metrics = _run_epoch(model, train_loader, optimizer, config, device)
-        val_metrics = _run_epoch(model, val_loader, None, config, device) if val_loader is not None else train_metrics
+        train_metrics = _run_epoch(model, train_loader, optimizer, config, device, epoch)
+        val_metrics = _run_epoch(model, val_loader, None, config, device, epoch) if val_loader is not None else train_metrics
         row = {
             "epoch": float(epoch),
             **{f"train_{key}": value for key, value in train_metrics.items()},
@@ -168,6 +196,20 @@ def train_transvae(config: TrainingConfig) -> dict[str, object]:
 
     metrics = {
         "config": asdict(config),
+        "training_mode": config.training_mode,
+        "input_policy": config.input_policy,
+        "encoder_input_length": 165 if config.input_policy == "full_length" else 164,
+        "objective": "historical joint objective" if config.training_mode == "paper_joint" else "four-tissue prediction MSE only",
+        "reconstruction_loss_implemented": config.training_mode == "paper_joint",
+        "kl_loss_implemented": config.training_mode == "paper_joint",
+        "three_mer_loss_implemented": config.training_mode == "paper_joint",
+        "three_mer_loss_differentiable": config.training_mode == "paper_joint",
+        "release_boundary": (
+            "paper-compatible joint training path with differentiable soft "
+            "3-mer composition loss" if config.training_mode == "paper_joint" else
+            "prediction-only training scaffold; not a reproduction of the "
+            "paper's joint TransVAE reconstruction/KL/prediction objective"
+        ),
         "num_records": len(dataset),
         "num_train_records": train_size,
         "num_validation_records": val_size,
@@ -191,6 +233,7 @@ def _run_epoch(
     optimizer: torch.optim.Optimizer | None,
     config: TrainingConfig,
     device: torch.device,
+    epoch: int = 1,
 ) -> dict[str, float]:
     if loader is None:
         return {"loss": 0.0, "reconstruction_loss": 0.0, "prediction_loss": 0.0, "kl_loss": 0.0}
@@ -203,16 +246,46 @@ def _run_epoch(
         targets = targets.to(device)
         if optimizer is not None:
             optimizer.zero_grad()
-        predicted = model.score_tokens(sequences)
-        prediction_loss = F.mse_loss(predicted, targets)
-        loss = config.prediction_weight * prediction_loss
+        if config.training_mode == "paper_joint":
+            logits, mean, logvar, predicted = model.joint_forward(sequences)
+            target_one_hot = F.one_hot(sequences[:, 1:], num_classes=4).float()
+            reconstructed = torch.softmax(model.vocab_to_base(logits), dim=-1)
+            length = min(reconstructed.size(1), target_one_hot.size(1))
+            reconstruction = F.binary_cross_entropy(
+                reconstructed[:, :length],
+                target_one_hot[:, :length],
+                reduction="mean",
+            )
+            kl = -0.5 * torch.sum(
+                1 + logvar - mean.pow(2) - logvar.exp(), dim=1
+            ).mean()
+            prediction_loss = F.mse_loss(predicted, targets, reduction="mean")
+            trimer = differentiable_trimer_loss(
+                reconstructed[:, :length], target_one_hot[:, :length]
+            )
+            beta = min(1.0, epoch / max(config.warmup_epochs, 1))
+            loss = (
+                config.reconstruction_weight * reconstruction
+                + beta * config.kl_weight * kl
+                + config.prediction_weight * prediction_loss
+                + config.trimer_weight * trimer
+            )
+        else:
+            predicted = model.score_tokens(sequences)
+            reconstruction = torch.zeros((), device=device)
+            kl = torch.zeros((), device=device)
+            trimer = torch.zeros((), device=device)
+            prediction_loss = F.mse_loss(predicted, targets)
+            loss = config.prediction_weight * prediction_loss
         if optimizer is not None:
             loss.backward()
             optimizer.step()
         batch_size = sequences.shape[0]
         total_items += batch_size
         totals["loss"] += float(loss.detach().cpu()) * batch_size
-        totals["reconstruction_loss"] += 0.0
+        totals["reconstruction_loss"] += float(reconstruction.detach().cpu())
         totals["prediction_loss"] += float(prediction_loss.detach().cpu()) * batch_size
-        totals["kl_loss"] += 0.0
+        totals["kl_loss"] += float(kl.detach().cpu())
+        totals.setdefault("trimer_loss", 0.0)
+        totals["trimer_loss"] += float(trimer.detach().cpu())
     return {key: value / max(total_items, 1) for key, value in totals.items()}

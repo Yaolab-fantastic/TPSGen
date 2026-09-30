@@ -4,6 +4,8 @@ from pathlib import Path
 
 import torch
 
+from tpsgen.training.transvae import TrainingConfig, differentiable_trimer_loss, train_transvae
+
 from tpsgen.models.transvae_mlp import (
     TransVAEMLP,
     encode_dna,
@@ -13,6 +15,21 @@ from tpsgen.models.transvae_mlp import (
 
 
 class TestTransVAEMLP(unittest.TestCase):
+    def test_soft_trimer_loss_backpropagates_to_reconstruction(self) -> None:
+        logits = torch.randn(2, 8, 4, requires_grad=True)
+        reconstructed = torch.softmax(logits, dim=-1)
+        target = torch.nn.functional.one_hot(
+            torch.randint(0, 4, (2, 8)), num_classes=4
+        ).float()
+        loss = differentiable_trimer_loss(reconstructed, target)
+        loss.backward()
+        self.assertGreater(float(logits.grad.abs().sum()), 0.0)
+
+    def test_training_rejects_unimplemented_joint_mode(self) -> None:
+        config = TrainingConfig(training_mode="paper_joint_vae")
+        with self.assertRaisesRegex(ValueError, "Only training_mode=prediction_only_scaffold"):
+            train_transvae(config)
+
     def test_encode_dna_accepts_exact_unambiguous_sequence(self) -> None:
         encoded = encode_dna("ACGT" * 41 + "A")
         self.assertEqual(tuple(encoded.shape), (165,))
@@ -34,6 +51,28 @@ class TestTransVAEMLP(unittest.TestCase):
             second = model.score_tokens(tokens)
         self.assertEqual(tuple(first.shape), (1, 4))
         torch.testing.assert_close(first, second)
+
+    def test_checkpoint_input_compatibility_is_explicit(self) -> None:
+        metadata = TransVAEMLP.input_compatibility_metadata()
+        self.assertEqual(metadata["encoder_source_length"], 164)
+        self.assertFalse(metadata["last_base_used_by_encoder"])
+        self.assertEqual(metadata["mask_token_alias"], "A (token 0)")
+        self.assertTrue(metadata["requires_training_match"])
+
+    def test_compatibility_input_policy_is_shared_and_explicit(self) -> None:
+        tokens = encode_dna("A" * 164 + "C").unsqueeze(0)
+        source, mask = TransVAEMLP.prepare_compatibility_inputs(tokens)
+        self.assertEqual(tuple(source.shape), (1, 164))
+        self.assertFalse(bool(mask[0, 0, 0]))
+        self.assertEqual(int(source[0, -1]), 0)
+
+    def test_full_length_policy_keeps_all_bases_and_masks_none(self) -> None:
+        model = TransVAEMLP(input_policy="full_length")
+        tokens = encode_dna("A" * 164 + "C").unsqueeze(0)
+        source, mask = model.prepare_inputs(tokens)
+        self.assertEqual(tuple(source.shape), (1, 165))
+        self.assertEqual(int(source[0, -1]), 1)
+        self.assertTrue(bool(mask.all()))
 
     def test_scoring_rejects_non_165_token_tensors(self) -> None:
         with self.assertRaisesRegex(ValueError, r"\[batch, 165\]"):

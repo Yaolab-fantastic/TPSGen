@@ -37,12 +37,12 @@
     {
       "name": "transvae_tomato_joint_predictor",
       "type": "transvae_model_adapter",
-      "status": "bundled",
-      "weights_path": "models/transvae/best_val_corr_model.pth",
-      "sha256": "cdc55cd2ce796386a5be74b8697790cbad70e7bcb6cfff85e189b234c9628f78",
-      "architecture": "Transformer-VAE encoder with 128-dimensional latent representation and four-output MLP predictor",
-      "source_convention": "project Transformer-VAE training workflow; 165-bp tomato promoter input",
-      "notes": "Paper-aligned tomato Transformer-VAE plus MLP scoring checkpoint. Loaded with strict state_dict compatibility."
+      "status": "training_required_not_bundled",
+      "weights_path": "models/transvae/full_length_joint_model.pth",
+      "sha256": null,
+      "architecture": "Transformer-VAE encoder with full 165-bp input, 128-dimensional latent representation and four-output MLP predictor",
+      "source_convention": "full-length A/C/G/T input with no nucleotide token aliased to padding",
+      "notes": "The legacy checkpoint was removed because it dropped the final base and aliased A with padding. Train this corrected model before enabling checkpoint-backed scoring."
     },
     {
       "name": "tomato_pregan_conditional_generator",

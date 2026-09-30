@@ -5,9 +5,19 @@ from pathlib import Path
 
 from tpsgen.io.fasta import read_fasta
 from tpsgen.pipeline.integrated import run_integrated_workflow
+from tpsgen.pipeline.integrated import _compute_tau
 
 
 class TestIntegratedWorkflow(unittest.TestCase):
+    def test_tau_rejects_negative_scores(self) -> None:
+        tau, status = _compute_tau({"root": 1.0, "stem": -1.0, "leaf": -1.0, "fruit": -1.0})
+        self.assertIsNone(tau)
+        self.assertEqual(status, "scores_must_be_non_negative")
+
+    def test_tau_rejects_non_positive_maximum(self) -> None:
+        tau, status = _compute_tau({"root": 0.0, "stem": 0.0, "leaf": 0.0, "fruit": 0.0})
+        self.assertIsNone(tau)
+        self.assertEqual(status, "maximum_score_must_be_positive")
     def test_run_with_dnabert_records_fresh_evidence(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         records = read_fasta(repo_root / "examples" / "demo_input.fasta")
