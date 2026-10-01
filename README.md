@@ -379,7 +379,7 @@ This does not mean execution failed. Inspect `preferred_tissue`, `target_margin`
 TPSGen/
 |-- configs/       Training configuration
 |-- data/          Input tables and retained result resources
-|-- docs/          Manuscript, supplement and documentation
+|-- docs/          Manuscript and documentation
 |-- examples/      Bundled FASTA example
 |-- models/        DNABERT, preGAN and TransVAE resources
 |-- scripts/       Training and reproducibility entry points
@@ -405,8 +405,6 @@ For each analysis, retain:
 - [`docs/training.md`](docs/training.md): TransVAE training procedure
 - [`models/README.md`](models/README.md): bundled model inventory
 - [`models/weights_manifest.json`](models/weights_manifest.json): checksums and metadata
-- [`docs/application_note_submission.tex`](docs/application_note_submission.tex): Application Note
-- [`docs/application_note_supplement.tex`](docs/application_note_supplement.tex): supplementary methods
 
 ## Citation
 
