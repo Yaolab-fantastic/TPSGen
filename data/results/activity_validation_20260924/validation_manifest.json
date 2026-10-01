@@ -1,0 +1,59 @@
+{
+  "source_file": "/data/zhoujie/Paper/MpraVAE/data/vaedata/val.csv",
+  "source_path_status": "historical_absolute_path_not_bundled",
+  "released_record_level_export": "observed_vs_predicted.csv",
+  "source_role": "held-out validation records used by the original TransVAE evaluation",
+  "num_records": 3703,
+  "sequence_length_bp": 165,
+  "tissue_columns": [
+    "expr_tissue_1",
+    "expr_tissue_2",
+    "expr_tissue_3",
+    "expr_tissue_4"
+  ],
+  "reported_validation_pcc": {
+    "expr_tissue_1": 0.7732,
+    "expr_tissue_2": 0.8159,
+    "expr_tissue_3": 0.7954,
+    "expr_tissue_4": 0.7876
+  },
+  "independent_test_set": false,
+  "prediction_file": "predicted_expression.csv",
+  "merged_file": "observed_vs_predicted.csv",
+  "metrics_file": "validation_metrics.csv",
+  "score_backend": "tomato_transvae_mlp_checkpoint_scoring",
+  "metrics": [
+    {
+      "tissue": "root",
+      "observed_column": "expr_tissue_1",
+      "predicted_column": "score_root",
+      "n": 3703,
+      "pearson_r": 0.780106,
+      "r_squared": 0.608565
+    },
+    {
+      "tissue": "stem",
+      "observed_column": "expr_tissue_2",
+      "predicted_column": "score_stem",
+      "n": 3703,
+      "pearson_r": 0.823665,
+      "r_squared": 0.678424
+    },
+    {
+      "tissue": "leaf",
+      "observed_column": "expr_tissue_3",
+      "predicted_column": "score_leaf",
+      "n": 3703,
+      "pearson_r": 0.801869,
+      "r_squared": 0.642994
+    },
+    {
+      "tissue": "fruit",
+      "observed_column": "expr_tissue_4",
+      "predicted_column": "score_fruit",
+      "n": 3703,
+      "pearson_r": 0.792406,
+      "r_squared": 0.627907
+    }
+  ]
+}

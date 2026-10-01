@@ -9,4 +9,5 @@ dist/
 .venv/
 tmp/
 outputs/
-models/dnabert/pytorch_model.bin
+models/transvae/fruit_aware_joint_model.pth
+models/transvae/fruit_aware_joint_metrics.json

@@ -1,0 +1,18 @@
+{
+  "source": "/data/zhoujie/Paper/deepseed/data/merged_result.csv",
+  "source_sha256": "27725877f334328d6bb66b2a47933e48cb8e625626b3c61b65b930737f0798e6",
+  "seed": 42,
+  "split_method": "deterministic random shuffle",
+  "role": "separate reproducibility split; not the 80/20 loader partition used to fit original_pregan_10000.pt",
+  "total_records": 5100,
+  "splits": {
+    "train": 3570,
+    "validation": 765,
+    "test": 765
+  },
+  "sha256": {
+    "train": "03e042f043edb32815c30271ddca8fe0ef914d31e0ef32f824b44cdaa80a70e7",
+    "validation": "d3acdfea08eafe478deeea007d1a7245c3b6ea803f264b7379f99841dd7ad39e",
+    "test": "4ee8bafcbe1508f74531c6e1e479c8c8572e1f36d60dc1e6385e004c6bcaf12d"
+  }
+}

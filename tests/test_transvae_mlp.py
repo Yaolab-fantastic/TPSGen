@@ -52,22 +52,17 @@ class TestTransVAEMLP(unittest.TestCase):
         self.assertEqual(tuple(first.shape), (1, 4))
         torch.testing.assert_close(first, second)
 
-    def test_checkpoint_input_compatibility_is_explicit(self) -> None:
-        metadata = TransVAEMLP.input_compatibility_metadata()
-        self.assertEqual(metadata["encoder_source_length"], 164)
-        self.assertFalse(metadata["last_base_used_by_encoder"])
-        self.assertEqual(metadata["mask_token_alias"], "A (token 0)")
-        self.assertTrue(metadata["requires_training_match"])
+    def test_latent_decode_is_full_length_and_deterministic(self) -> None:
+        model = TransVAEMLP().eval()
+        latent = torch.zeros((1, 128))
+        with torch.no_grad():
+            first = model.decode_latent(latent)
+            second = model.decode_latent(latent)
+        self.assertEqual(tuple(first.shape), (1, 165, 4))
+        torch.testing.assert_close(first, second)
 
-    def test_compatibility_input_policy_is_shared_and_explicit(self) -> None:
-        tokens = encode_dna("A" * 164 + "C").unsqueeze(0)
-        source, mask = TransVAEMLP.prepare_compatibility_inputs(tokens)
-        self.assertEqual(tuple(source.shape), (1, 164))
-        self.assertFalse(bool(mask[0, 0, 0]))
-        self.assertEqual(int(source[0, -1]), 0)
-
-    def test_full_length_policy_keeps_all_bases_and_masks_none(self) -> None:
-        model = TransVAEMLP(input_policy="full_length")
+    def test_full_length_inputs_keep_all_bases_and_mask_none(self) -> None:
+        model = TransVAEMLP()
         tokens = encode_dna("A" * 164 + "C").unsqueeze(0)
         source, mask = model.prepare_inputs(tokens)
         self.assertEqual(tuple(source.shape), (1, 165))

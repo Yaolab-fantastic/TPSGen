@@ -13,7 +13,7 @@ from tpsgen.io.csv import write_dict_rows
 from tpsgen.io.schema import LegacyLabeledSequence, LegacyMotifRecord
 
 
-@dataclass(slots=True)
+@dataclass
 class DNABERTDataset:
     sequences: list[str]
     labels: list[int]

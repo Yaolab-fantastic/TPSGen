@@ -43,7 +43,7 @@ def _default_models_dir() -> Path:
     return Path.cwd() / "models"
 
 
-DEFAULT_TRANSVAE_CHECKPOINT = _default_models_dir() / "transvae" / "full_length_joint_model.pth"
+DEFAULT_TRANSVAE_CHECKPOINT = _default_models_dir() / "transvae" / "historical_compatible_best_val_corr.pth"
 
 _TATA_PATTERN = re.compile(r"TATA[AT]A[AT]")
 TOMATO_GC_RANGE = (0.12, 0.52)
@@ -104,17 +104,30 @@ def promoter_qc_summary(
     sequence: str,
     gc_range: tuple[float, float] = TOMATO_GC_RANGE,
     max_poly: int = TOMATO_MAX_HOMOPOLYMER,
+    min_distinct_bases: int = 3,
+    min_entropy: float = 1.20,
 ) -> dict[str, object]:
     window = midpoint_window(sequence)
     gc = (sequence.count("G") + sequence.count("C")) / max(len(sequence), 1)
     max_homopolymer = max_homopolymer_length(sequence)
+    counts = [sequence.count(base) for base in BASES]
+    total = max(len(sequence), 1)
+    import math
+    entropy = -sum((count / total) * math.log2(count / total) for count in counts if count)
     tata_like_window = _TATA_PATTERN.search(window) is not None
     window_at_fraction = (window.count("A") + window.count("T")) / max(len(window), 1)
-    passes = gc_range[0] <= gc <= gc_range[1] and max_homopolymer <= max_poly
+    passes = (
+        gc_range[0] <= gc <= gc_range[1]
+        and max_homopolymer <= max_poly
+        and sum(count > 0 for count in counts) >= min_distinct_bases
+        and entropy >= min_entropy
+    )
     return {
         "passes": passes,
         "gc_fraction": round(gc, 4),
         "max_homopolymer": max_homopolymer,
+        "distinct_bases": sum(count > 0 for count in counts),
+        "shannon_entropy": round(entropy, 4),
         "tata_like_window": tata_like_window,
         "window_at_fraction": round(window_at_fraction, 4),
     }
@@ -234,10 +247,15 @@ class TransVAETomatoAdapter:
         checkpoint_path: str | Path | None = None,
         device: str = "cpu",
         latent_dim: int = 128,
+        historical_compatible: bool | None = None,
     ) -> None:
         self.checkpoint_path = Path(checkpoint_path or DEFAULT_TRANSVAE_CHECKPOINT)
         self.device = torch.device(device)
         self.latent_dim = latent_dim
+        self.historical_compatible = (
+            "historical_compatible" in self.checkpoint_path.name
+            if historical_compatible is None else historical_compatible
+        )
         self.model = self._load_model()
 
     def _load_model(self) -> JointPromoterModel:
@@ -258,7 +276,10 @@ class TransVAETomatoAdapter:
 
     def _predict_scores(self, input_tensor: torch.Tensor) -> dict[str, float]:
         with torch.no_grad():
-            raw_scores = self.model.score_tokens(input_tensor)
+            raw_scores = (
+                self.model.score_tokens_historical_compatible(input_tensor)
+                if self.historical_compatible else self.model.score_tokens(input_tensor)
+            )
             scores = raw_scores[0].detach().cpu().tolist()
         return dict(zip(TISSUE_ORDER, [round(float(score), 6) for score in scores]))
 
@@ -281,6 +302,69 @@ class TransVAETomatoAdapter:
             results.append(self._predict_one(record))
         return results
 
+    def constrained_search(
+        self,
+        seed_sequence: str,
+        mutable_positions: list[int],
+        target_tissue: str = "fruit",
+        population: int = 256,
+        generations: int = 40,
+        seed: int = 42,
+    ) -> list[dict[str, object]]:
+        """Search editable bases while preserving every non-editable position."""
+        if len(seed_sequence) != 165 or any(base not in BASES for base in seed_sequence):
+            raise ValueError("constrained_search requires one unambiguous 165-bp seed")
+        if not mutable_positions:
+            return []
+        import random
+        rng = random.Random(seed)
+        target_index = TISSUE_ORDER.index(target_tissue)
+        population_sequences = [seed_sequence]
+        for _ in range(population - 1):
+            chars = list(seed_sequence)
+            for position in mutable_positions:
+                if rng.random() < 0.25:
+                    chars[position] = rng.choice(BASES)
+            population_sequences.append("".join(chars))
+
+        def evaluate(sequences: list[str]) -> list[tuple[float, dict[str, float], float]]:
+            tokens = torch.stack([encode_dna(sequence) for sequence in sequences]).to(self.device)
+            with torch.no_grad():
+                raw = self.model.score_tokens_historical_compatible(tokens)
+                scores = F.softplus(raw)
+            evaluated = []
+            for sequence, values_tensor in zip(sequences, scores):
+                values = values_tensor.detach().cpu().tolist()
+                other = max(value for index, value in enumerate(values) if index != target_index)
+                maximum = max(values)
+                tau = sum(1.0 - value / maximum for value in values) / 3.0
+                qc = promoter_qc_summary(sequence)
+                objective = values[target_index] - other + 0.25 * tau
+                if not qc["passes"]:
+                    objective -= 10.0
+                evaluated.append((objective, dict(zip(TISSUE_ORDER, values)), tau))
+            return evaluated
+
+        archive: dict[str, tuple[float, dict[str, float], float]] = {}
+        for _ in range(generations):
+            for sequence, result in zip(population_sequences, evaluate(population_sequences)):
+                if sequence not in archive or result[0] > archive[sequence][0]:
+                    archive[sequence] = result
+            elites = sorted(archive, key=lambda sequence: archive[sequence][0], reverse=True)[: max(8, population // 8)]
+            population_sequences = list(elites)
+            while len(population_sequences) < population:
+                chars = list(rng.choice(elites))
+                count = rng.randint(1, max(1, min(6, len(mutable_positions))))
+                for position in rng.sample(mutable_positions, count):
+                    chars[position] = rng.choice(BASES)
+                population_sequences.append("".join(chars))
+        rows = []
+        for rank, sequence in enumerate(sorted(archive, key=lambda item: archive[item][0], reverse=True), 1):
+            objective, values, tau = archive[sequence]
+            rows.append({"sequence": sequence, "search_rank": rank, "objective": objective,
+                         "scores": values, "tau": tau, "passes_qc": promoter_qc_summary(sequence)["passes"]})
+        return rows
+
     def design(
         self,
         records: list[SequenceRecord],
@@ -292,13 +376,68 @@ class TransVAETomatoAdapter:
         gamma: float = 0.05,
         beta: float = 0.1,
         hi_lim: float = 10.0,
+        max_mutations: int = 80,
     ) -> list[DesignResult]:
-        raise NotImplementedError(
-            "TransVAE latent-space candidate generation is not released as a "
-            "validated design API in the current package. Use predict() for "
-            "checkpoint-backed four-tissue scoring and the package-native "
-            "design command for released candidate generation."
-        )
+        if target_tissue not in TISSUE_ORDER:
+            raise ValueError(f"Unsupported target tissue: {target_tissue}")
+        if candidates < 1 or steps < 1:
+            raise ValueError("candidates and steps must be positive")
+        target_index = TISSUE_ORDER.index(target_tissue)
+        results: list[DesignResult] = []
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+        for record_index, record in enumerate(records):
+            tokens = self._tensorize(record)
+            with torch.no_grad():
+                if self.historical_compatible:
+                    source = tokens[:, :-1]
+                    mask = (source != 0).unsqueeze(-2)
+                    initial, _ = self.model.transvae.encode_distribution(source, mask)
+                else:
+                    source, mask = self.model.prepare_inputs(tokens)
+                    initial, _ = self.model.transvae.encode_distribution(source, mask)
+            for candidate_index in range(candidates):
+                generator = torch.Generator(device=self.device).manual_seed(
+                    seed + record_index * 1009 + candidate_index
+                )
+                noise = torch.randn(initial.shape, generator=generator, device=self.device)
+                latent = (initial + 0.05 * noise).detach().requires_grad_(True)
+                optimizer = torch.optim.Adam([latent], lr=learning_rate)
+                for _ in range(steps):
+                    optimizer.zero_grad()
+                    scores = softplus_scores(self.model.score_latent(latent))
+                    target = scores[:, target_index]
+                    other = torch.cat(
+                        (scores[:, :target_index], scores[:, target_index + 1 :]), dim=1
+                    ).max(dim=1).values
+                    regularization = (latent - initial).pow(2).mean(dim=1)
+                    objective = target - other - gamma * regularization - beta * latent.pow(2).mean(dim=1)
+                    (-objective.mean()).backward()
+                    optimizer.step()
+                    with torch.no_grad():
+                        latent.clamp_(-hi_lim, hi_lim)
+                with torch.no_grad():
+                    base_logits = self.model.decode_latent(latent)[0]
+                    sequence = "".join(BASES[index] for index in base_logits.argmax(dim=-1).tolist())
+                    rescored = self._predict_one(
+                        SequenceRecord(f"{record.sequence_id}__latent_{candidate_index + 1}", sequence)
+                    )
+                score_map = {tissue: getattr(rescored, f"score_{tissue}") for tissue in TISSUE_ORDER}
+                qc = promoter_qc_summary(sequence)
+                qc["mutation_count"] = sum(a != b for a, b in zip(record.sequence, sequence))
+                qc["passes"] = bool(qc["passes"] and qc["mutation_count"] <= max_mutations)
+                results.append(DesignResult(
+                    sequence_id=record.sequence_id, target_tissue=target_tissue,
+                    candidate_rank=candidate_index + 1, original_sequence=record.sequence,
+                    designed_sequence=sequence, score_root=score_map["root"],
+                    score_stem=score_map["stem"], score_leaf=score_map["leaf"],
+                    score_fruit=score_map["fruit"], preserved_motifs="not_constrained",
+                    design_status="historical_transvae_latent_optimized_rescored",
+                    num_mutations=sum(a != b for a, b in zip(record.sequence, sequence)),
+                    passes_qc=bool(qc["passes"]),
+                ))
+        return results
 
 
 DEFAULT_MPRAVAE_CHECKPOINT = DEFAULT_TRANSVAE_CHECKPOINT

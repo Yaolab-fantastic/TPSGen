@@ -1,0 +1,13 @@
+{
+  "source": "/data/zhoujie/Paper/MpraVAE/data/vaedata/log_transformed_thresholded_data.csv",
+  "source_sha256": "09e00c967201c7c316d388d1eed1f41ef446d06b187d20d411d590a1d26890ff",
+  "seed": 42,
+  "sizes": {
+    "train": 11257,
+    "validation": 1407,
+    "test": 1407
+  },
+  "train_sha256": "05ed1740db3d615c1c6538cc05f8183bab96cc87a838640e2f124d72f0556e49",
+  "validation_sha256": "6ffaaf0ee2efc496ad87a4f2ee66f58a60c98692a62fe936e4442b838ba8feaf",
+  "test_sha256": "ef63997fc8c46187cff16b9fbf9b19117c9737b207f3ef204a45e6be2011104d"
+}

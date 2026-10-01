@@ -24,7 +24,7 @@
 
 % \title[TPSGen]{TPSGen: an integrated framework for motif-conditioned generation and tissue-bias prioritization of tomato promoters}
 
-\title[TPSGen]{TPSGen: Motif-conditioned Design of Tomato Promoter Candidates for Tissue-biased Expression}
+\title[TPSGen]{TPSGen: motif-conditioned design of tomato promoter candidates for tissue-biased expression}
 
 \author[1,2,3]{Zhoujie Fan}
 \author[1,2]{Xiaoyu Wang}
@@ -68,9 +68,7 @@ Shan Cong (\href{mailto:shan.cong@hrbeu.edu.cn}{shan.cong@hrbeu.edu.cn})}
 \accepted{XX}{XX}{XXXX}
 
 \abstract{
-% Application Note 的 Summary 要快速说明工具解决什么问题、整合哪些功能、为什么是软件框架；不要展开算法细节，也不要声称新模型或性能最优。
-\textbf{Summary:} Designing promoters for tissue-biased expression requires comparing activity across target and non-target tissues. TPSGen is a Python framework that combines motif-conditioned candidate construction with cross-tissue scoring for tomato promoter design. It uses motif evidence to constrain sequence modifications, scores input and designed sequences across root, stem, leaf and fruit, and prioritizes candidates using target-tissue scores and tissue-bias margins. The framework provides candidate sequences, motif annotations and tissue-score profiles to support candidate selection for experimental evaluation.\\
-% Availability 部分只写实现语言、安装方式、代码位置和许可；这是 Bioinformatics Application Note 审稿人首先检查的软件可用性信息。
+\textbf{Summary:} Designing promoters for tissue-biased expression requires comparing activity across target and non-target tissues. TPSGen combines motif-conditioned candidate construction with four-tissue scoring for tomato promoter design. Sequence evidence defines the conditioning templates, and target-tissue scores and bias margins guide candidate prioritization. In model-development experiments, preGAN retained 99.55\% of nucleotides at conditioned positions. Evaluation of the released scoring checkpoint yielded Pearson correlations of 0.78--0.82 across root, stem, leaf and fruit. TPSGen provides candidate sequences, motif annotations and tissue-score profiles for experimental evaluation.\\
 \textbf{Availability and Implementation:} TPSGen is implemented in Python and distributed as an installable command-line package. Source code, documentation and example workflows are freely available under the MIT license at \url{https://github.com/Yaolab-fantastic/TPSGen}.\\
 % \textbf{Contact:} \href{mailto:shan.cong@hrbeu.edu.cn}{shan.cong@hrbeu.edu.cn}.\\
 \textbf{Supplementary information:} Supplementary data are available at \textit{Bioinformatics} online.
@@ -81,64 +79,199 @@ Shan Cong (\href{mailto:shan.cong@hrbeu.edu.cn}{shan.cong@hrbeu.edu.cn})}
 \maketitle
 
 \section{Introduction}
-Engineering promoter sequences can tune gene expression and generate useful quantitative trait variation in crops, as demonstrated by promoter editing in tomato \citep{RodriguezLeal2017Engineering}. Studies of minimal and core plant promoters have also identified sequence features that support the design of promoters with different activities \citep{Cai2020Minimal,Jores2021Synthetic}. For tissue-directed applications, promoter selection must consider where expression occurs as well as its strength: a candidate intended for fruit-focused expression should favor fruit relative to vegetative tissues.
 
-Sequence-to-expression models have enabled prediction of plant transcript abundance from regulatory DNA \citep{Washburn2019Evolutionarily}, while PhytoExpr extends this approach to computational searches for functional regulatory variants and species-specific regulatory sequences \citep{Li2024PhytoExpr}. DeepSEED conditions flanking-sequence generation on predefined cis-regulatory elements \citep{Zhang2023DeepSEED}, and GPro combines generation, prediction and optimization within a common toolkit \citep{Wang2024GPro}. Beyond activity tuning, deep-learning approaches have enabled cell-type- and tissue-directed enhancer design in animal systems \citep{Taskiran2024Enhancers,deAlmeida2024Enhancers,Gosai2024MachineGuided}.
+Engineering promoter sequences can tune gene expression and generate useful
+quantitative trait variation in crops, as demonstrated by promoter editing in
+tomato \citep{RodriguezLeal2017Engineering}. Studies of minimal and core plant
+promoters have identified sequence features that support the design of
+promoters with different activities \citep{Cai2020Minimal,Jores2021Synthetic}.
+For tissue-directed applications, promoter design must account for both
+expression strength and its distribution across tissues. A promoter intended
+for fruit-focused expression should favor fruit relative to roots, stems and leaves.
 
-However, the output used to guide candidate selection must match the intended tissue preference. In PlantCRE, for example, the sequence-to-expression predictor summarizes expression by its maximum across tissues rather than returning a tissue-resolved profile \citep{Qiu2025Plasticity}. This type of summary cannot, by itself, distinguish a fruit-biased candidate from one predicted to be active across several organs. More generally, promoter design for tissue preference requires scoring criteria that explicitly compare target and non-target tissues. For tomato promoter design, this motivates linking motif-conditioned candidate construction to separate root-, stem-, leaf- and fruit-associated scores and an explicit target-versus-non-target ranking criterion. This connection allows sequence constraints and predicted tissue bias to be considered together when selecting candidates.
+Sequence-to-expression models have enabled prediction of plant transcript
+abundance from regulatory DNA \citep{Washburn2019Evolutionarily}. PhytoExpr
+extends this approach to computational searches for functional regulatory
+variants and species-specific regulatory sequences \citep{Li2024PhytoExpr}.
+DeepSEED generates flanking sequences conditioned on predefined cis-regulatory
+elements, retaining selected regulatory sequences during design
+\citep{Zhang2023DeepSEED}. GPro combines generative models, activity predictors
+and optimization methods within a common toolkit \citep{Wang2024GPro}.
+Deep-learning approaches have also enabled cell-type- and tissue-directed
+enhancer design in animal systems
+\citep{Taskiran2024Enhancers,deAlmeida2024Enhancers,Gosai2024MachineGuided}.
 
-Here, we present TPSGen, a Python framework for motif-conditioned design of tomato promoter candidates for tissue-biased expression. TPSGen uses motif evidence to constrain sequence modifications, evaluates input and designed sequences using four tissue-associated scores, and ranks candidates according to target-tissue-associated scores while reporting a target-tissue bias measure. Candidate sequences, motif annotations, tissue-associated scores and run provenance are reported together to support reproducible selection of candidates for experimental evaluation.
+However, a single expression value does not show which tissue a promoter
+favors. PlantCRE, for
+example, predicts the maximum expression across tissues rather than a
+tissue-resolved profile \citep{Qiu2025Plasticity}. Such a summary cannot
+distinguish a fruit-biased candidate from one predicted to be active across
+several organs. For tomato promoter design, candidates therefore need to
+be evaluated across the target and non-target tissues. Motif-conditioned
+construction retains selected regulatory regions during sequence
+modification, and cross-tissue scoring allows the resulting candidates to
+be prioritized for target-tissue activity and relative tissue preference.
+
+Here, we present TPSGen, a Python framework for motif-conditioned design of
+tomato promoter candidates for tissue-biased expression. It converts
+sequence evidence into conditioning templates, generates candidates with
+fruit-associated guidance and evaluates them across root, stem, leaf and
+fruit. Target-tissue scores and target-bias margins guide candidate
+prioritization. We assess the sequence evidence, retention of conditioned
+positions and four-tissue profiles of generated candidates, and provide a
+40-promoter example of the package-native workflow. Candidate sequences
+are linked to their source promoters, sequence changes and score profiles
+for comparison and experimental selection.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{framework_v2}
 
-\caption{Overview of TPSGen. (A) One or more 165-bp tomato promoter sequences are supplied in FASTA format. Motif annotations or optional DNABERT-derived evidence support constrained candidate construction, after which the original and designed sequences can be evaluated using four tissue-associated scores and ranked by tissue bias. The package-native route provides the default executable workflow, while DNABERT, preGAN and TransVAE-MLP provide optional model-backed components. (B) Optional model-backed components. DNABERT converts promoter sequence context into overlapping 6-mer tokens and derives position-wise model evidence and recurrent sequence patterns. When a compatible checkpoint is supplied, preGAN combines retained high-evidence regions with masked editable positions and a frozen fruit-associated predictor to generate conditional candidates; fruit-associated guidance is used as a target-tissue condition in the current optional generation route. The TransVAE-MLP adapter encodes promoter sequences into a latent representation and uses an MLP to produce root-, stem-, leaf- and fruit-associated scores for bias assessment and candidate ranking. Backend choices and checkpoint use are recorded in the run provenance.}
+\caption{Overview of TPSGen. (A) Model-backed workflow for 165-bp tomato promoter sequences supplied in FASTA format. DNABERT-derived evidence constrains candidate construction by preGAN, and TransVAE-MLP scores input and designed sequences across four tissues. Outputs include candidate sequences, motif evidence and candidate rankings. (B) Model architectures. DNABERT processes overlapping 6-mer tokens to derive position-associated evidence and recurrent sequence patterns. preGAN generates candidates from masked templates with retained high-evidence regions, using a frozen fruit-associated predictor for guidance. TransVAE-MLP maps sequence representations to scores for root, stem, leaf and fruit.}
 \label{fig:framework}
 \end{figure*}
 
 \section{Implementation}
 
-TPSGen is a modular Python command-line framework that standardizes tomato promoter design from input sequence to ranked candidates. 
-The overall workflow consists of promoter interpretation, motif-guided candidate construction, tissue-associated scoring and candidate prioritization (Fig.~\ref{fig:framework}). 
-The package separates sequence construction from candidate assessment, enabling generated candidates and input promoters to be evaluated using the same scoring and reporting scheme. A multi-record FASTA input is validated, interpreted, used for candidate construction and summarized in a common set of output files. The package-native route runs end-to-end without model retraining; input definitions and model settings are provided in Supplementary Sections S1--S4.
+TPSGen provides a model-backed workflow linking DNABERT sequence evidence,
+preGAN generation and TransVAE-MLP scoring (Fig.~\ref{fig:framework}). Its
+package-native route uses exact-pattern scanning, seeded sequence
+substitutions and a deterministic scorer. Generation and scoring backends
+are selected separately, and the same scorer is applied to input and
+candidate sequences. Execution settings and commands are provided in
+Supplementary Section S5.
 
-\subsection{Input representation and promoter processing}
+\subsection{Promoter data and sequence evidence}
 
-The primary input is a multi-record FASTA file containing tomato promoter sequences represented as the project-defined 165-bp windows. In the source annotation, each window is defined relative to the annotated gene-start coordinate, which serves as a TSS proxy. TPSGen validates sequence length and alphabet, records rejected records and writes a provenance manifest containing the package version, route, seed and input summary.
+Inputs are 165-bp tomato promoter sequences in multi-record FASTA format.
+For model development, windows were extracted immediately upstream of
+positive-strand gene starts in the ITAG3.2 annotation obtained through
+Phytozome \citep{Goodstein2012PhytozomeSource}. Annotated gene starts serve
+as proxies for transcription start sites. TPSGen checks sequence length
+and the A/C/G/T alphabet before candidate construction.
 
-Promoter interpretation is provided by a transparent package-native motif scanner and an optional DNABERT-based evidence route. The package-native scanner reports configured exact sequence-pattern matches, whereas the DNABERT route processes overlapping 6-mer tokens and reports position-associated evidence and model-derived recurrent sequence patterns \citep{Ji2021}. These evidence types are exposed separately through standardized tables that can be inspected before candidate construction (Supplementary Section S2).
+Expression targets were obtained from the MicroTom metabolic network
+\citep{Li2020MMNSource}. Promoter sequences were matched to gene expression
+in root, stem and leaf at 85 days post germination (R85, S85 and L85), and
+fruit at 15 days after breaker (Br15). The four columns were transformed
+using $\log(1+x)$ and processed as described in Supplementary Section S1.
+The resulting ITAG-MMNP2E resource contains 14,071 promoter--target records.
+These four organ--stage measurements define the model-backed scoring targets.
+
+DNABERT was pretrained on 34,725 promoter-related sequences of 500 bp and
+fine-tuned on 4,448 balanced 165-bp promoter/non-promoter examples
+\citep{Ji2021}. Attention-derived evidence from overlapping 6-mer tokens
+is projected onto nucleotide positions. High-evidence segments are
+collected into recurrent sequence patterns and used to nominate regions
+for retention during generation. The package-native scanner instead
+identifies exact matches to configured patterns. The two evidence sources
+are recorded separately (Supplementary Section S2).
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.85\textwidth]{fig2_v2}
-\caption{Computational characterization of TPSGen outputs. (A) Fruit-associated score distributions for the 40 input promoters and the Rank-1 candidates recorded in a fixed package-native run. (B) Corresponding fruit-bias margin distributions; the dashed line marks zero margin. (C) Pearson correlations between observed expression-associated labels and TransVAE-MLP predicted scores across the four tomato tissues on held-out validation records. (D) Observed-versus-predicted relationship for the fruit-associated label and its TransVAE-MLP score, with the fitted regression line, 95\% confidence interval and marginal value distributions. (E) Position-wise sequence composition of the input promoters and Rank-1 candidates, with the central track showing the change in nucleotide frequency of Rank-1 candidates relative to the input promoters at each position. Scores and sequence changes are computational outputs for candidate prioritization and do not constitute experimental measurements of promoter activity.}
+\includegraphics[width=0.95\textwidth]{fig2_v2}
+\caption{Candidate design and scoring-model validation. (A) Fruit-associated score distributions for 40 input promoters and the top-ranked (Rank-1) candidates recorded in a package-native run. (B) Corresponding fruit-bias margins. The dashed line marks zero margin. (C) Pearson correlations between expression labels and TransVAE-MLP scores for the four tissues in the released-checkpoint evaluation. (D) Fruit-associated expression labels and TransVAE-MLP scores for 3,703 checkpoint-evaluation records, with a fitted regression line, its 95\% confidence interval and marginal distributions; the annotation reports Pearson correlation and sample size. (E) Sequence logos for the input promoters and Rank-1 candidates, with information content shown in bits. The central track shows the signed frequency change of the nucleotide with the largest absolute change at each position relative to the input set. Positions are indexed relative to the annotated gene start used as a TSS proxy.}
 \label{fig:main-results}
 \end{figure*}
 
-\subsection{Candidate generation and tissue-associated scoring}
+\subsection{Motif-conditioned candidate generation}
 
-TPSGen separates candidate construction from prioritization while exposing both through the same workflow. The default route performs deterministic motif-aware editing by protecting detected motif positions from the selected motif evidence source and applying seeded substitutions to editable positions. When a compatible checkpoint is supplied, the optional preGAN route uses masked 165-bp templates and fruit-associated scalar guidance for conditional generation. Fruit-associated guidance is used during candidate generation, whereas four-tissue scoring is applied subsequently for tissue-bias prioritization. In both cases, generation denotes computational candidate construction and not experimentally confirmed promoter activity.
+The package-native generator leaves the selected motif positions unchanged
+and applies seeded substitutions at the remaining positions. The preGAN
+route uses a 165-bp template in which high-evidence regions retain their
+sequence and editable positions are masked. Its generator uses a linear
+projection followed by three one-dimensional convolutional residual blocks
+to output nucleotide probabilities. A conditional critic compares template--reference and
+template--generated sequence pairs.
 
-For prioritization, the selected scoring backend reports root-, stem-, leaf- and fruit-associated scores and calculates a target-bias margin as the target score minus the highest score among the three non-target tissues. In the model-backed route, TransVAE-MLP encodes each promoter sequence into a latent representation and maps it to the four tissue-associated scores. Candidates are ranked within each input sequence primarily by the requested target-tissue score, with target-bias margin used as a secondary criterion for tied scores. Scores from different backends are reported on their respective scales and are not compared across backends; these outputs are computational prioritization signals rather than TPM or experimentally validated tissue specificity (Supplementary Section S4).
+preGAN was trained on 5,100 paired tomato promoter records selected for
+high Br15-associated expression. Its objective combines an adversarial
+loss, an $L_1$ condition-consistency penalty and a fruit-score
+prediction loss. The $L_1$ term encourages retention of the supplied
+sequence context. A frozen DenseNet--LSTM predictor supplies the fruit
+score, and the prediction loss measures its squared deviation from the
+target value. The released workflow additionally checks retained positions
+and applies constrained four-tissue-guided search when strict preGAN candidates
+are unavailable. After generation, TransVAE-MLP evaluates the candidate across
+all four tissues (Supplementary Section S3).
 
-A central function of TPSGen is to generate candidate FASTA records and evaluate them in the same schema as the input promoter. Each candidate is accompanied by its route, seed, protected-region summary, four tissue-associated scores, target-bias margin and quality-control fields. Sequence construction and candidate prioritization are therefore traceable within a common output schema.
+\subsection{Four-tissue scoring and candidate selection}
 
-Structured reports, example inputs, model resources and provenance manifests support reproducible use. The repository documents optional checkpoint-backed routes separately from the package-native workflow and records the selected backend for each run.
+TransVAE-MLP jointly learns sequence reconstruction and four-target
+regression. A Transformer encoder and convolutional bottleneck parameterize
+a latent distribution. During training, a decoder reconstructs the sequence,
+while a multilayer perceptron (MLP) predicts the four processed MMN targets.
+The loss combines reconstruction, latent-distribution regularization,
+expression regression and a 3-mer composition term. At inference, the MLP
+uses the latent mean to produce one four-score profile per sequence
+(Supplementary Section S4).
 
-\section{Candidate Design and Scoring Validation}
+For target tissue $t$, the target-bias margin is
+\begin{equation}
+\Delta_t(x)=s_t(x)-\max_{j\ne t}s_j(x),
+\label{eq:target-bias}
+\end{equation}
+where $s_t(x)$ is the target-tissue score and the maximum is taken over
+the other three tissues. A positive margin indicates that the target has
+the highest score. Candidates are ranked within each input by target-tissue
+score, with larger margins used to resolve ties. The complementary index
+$\tau$ summarizes the concentration of the four-score profile
+(Supplementary Section S1.4). The released workflow first applies the
+paper-level threshold of $\tau\geq0.7$. If no candidate meets this threshold,
+an optional adaptive fallback may return a target-highest, positive-margin
+candidate labelled \emph{target-biased}; the requested and effective
+thresholds are both recorded, and such a result is not labelled strongly
+tissue-specific. Scores are compared within the selected backend.
 
-We used the package-native workflow on 40 tomato promoter sequences of 165 bp, generating three candidates per input with a fixed seed and retaining the complete output manifest. Fruit was used as the target tissue in this demonstration because the available conditional generation route currently supports fruit-associated guidance.
+Output tables link each candidate to its source promoter, sequence
+changes, retained regions, four-tissue scores and target-bias margin.
+Original-sequence scores are included for comparison. Candidate FASTA
+files support sequence selection for synthesis, while run metadata record
+the generation and scoring backends, checkpoint use and random seed.
 
-The run produced motif annotations, candidate FASTA sequences, four score fields, quality-control summaries and a provenance report without manual format conversion. Candidates were ranked primarily using the requested target-tissue score, with fruit-bias margin used to resolve tied scores; these outputs support computational prioritization only and are not measurements of promoter expression.
+\section{Sequence evidence, generation and candidate evaluation}
 
-The integrated output is illustrated in Fig.~\ref{fig:main-results}. In the package-native demonstration, the Rank-1 candidates show the distribution of fruit-associated scores and fruit-bias margins under the scoring procedure, together with their position-wise sequence composition (Fig.~\ref{fig:main-results}A,B,E). In the separate TransVAE-MLP validation analysis, Pearson correlations were 0.78, 0.82, 0.80 and 0.79 for root, stem, leaf and fruit, respectively (Fig.~\ref{fig:main-results}C); the fruit-associated target showed \(r=0.79\) and \(R^2=0.63\) across 3,703 validation records (Fig.~\ref{fig:main-results}D). These panels summarize the design outputs and scoring-model validation.
+DNABERT achieved an F1 score of 0.906 and a Matthews correlation coefficient
+of 0.813 on the promoter-classification test set (Supplementary Table S2).
+Attention-derived evidence was concentrated approximately 50--30 bp upstream
+of the gene-start proxy, and recurrent high-evidence patterns included
+CTATT, ACTAA, ATCCA and TTTAT. Perturbation of selected regions increased
+model loss in the in-silico mutagenesis analysis (Supplementary Fig.~S1).
 
-Model-specific validation results and their provenance are reported separately in the Supplementary Information and are not treated as an independent benchmark of the current package. Together, these results show that TPSGen links promoter characterization, candidate generation and tissue-bias prioritization through a reproducible output schema.
+In the preGAN model-development evaluation, 99.55\% of nucleotides at
+non-masked positions matched the reference sequence, quantifying retention
+of the conditioning context. In the model comparison, generated-versus-natural
+$k$-mer frequency correlations were 0.95, 0.93 and 0.89 for $k=4,5,6$,
+compared with 0.91, 0.88 and 0.86 for WGAN (Supplementary Table S3 and
+Fig.~S3A).
+
+Twenty preGAN candidates were also scored with TransVAE-MLP. Their
+four-score profiles generally favored Br15, and 18 had $\tau>0.7$, with
+$\tau$ ranging from 0.658 to 0.879 across the set (Supplementary Fig.~S2C,D).
+
+
+For the released TransVAE-MLP checkpoint, correlations between predicted
+scores and reference expression labels were 0.78, 0.82, 0.80 and 0.79 for
+root, stem, leaf and fruit, respectively (Fig.~\ref{fig:main-results}C).
+The fruit analysis used 3,703 checkpoint-evaluation records and yielded
+Pearson $r=0.79$ (Fig.~\ref{fig:main-results}D). The model-development test results
+are reported in Supplementary Section S4.2. This checkpoint-characterization
+cohort is not presented as an independent external performance evaluation.
+
+Using fruit as the target, we also ran the package-native workflow on
+40 promoters and generated three candidates per input, yielding 120
+sequences. Compared with the inputs, their Rank-1 candidates showed higher
+fruit-associated score and bias-margin distributions under the native
+scorer (Fig.~\ref{fig:main-results}A,B). Figure~\ref{fig:main-results}E shows
+the corresponding sequence logos and position-wise frequency changes.
 
 \section{Conclusion}
 
-TPSGen provides a computational framework for motif-conditioned design of tomato promoter candidates with tissue-biased expression priorities. By connecting motif-aware sequence construction with tissue-resolved scoring, TPSGen supports candidate selection based on target-versus-non-target expression preference while retaining sequence information for downstream experimental evaluation.
+TPSGen connects sequence evidence, motif-conditioned generation and
+four-tissue evaluation for tomato promoter design. It supports candidate
+selection by showing which sequence regions were retained and how the
+resulting score profile favors the target tissue. The software provides
+ranked sequences and their associated evidence for experimental testing.
 
 \section*{Author contributions}
 
@@ -153,16 +286,19 @@ Supplementary data are available online at \textit{Bioinformatics} and in the TP
 The authors declare no conflict of interest.
 
 \section*{Funding}
-This work is supported partly by the National Natural Science Foundation of China (62673148), the Hainan Provincial Natural Science Foundation of China (526QN0672, 626MS0266), the Shandong Provincial Natural Science Foundation (ZR2024QF081).
-
-\mbox{}
+This work is supported in part by the National Natural Science Foundation of China (62673148), the Hainan Provincial Natural Science Foundation of China (526QN0672, 626MS0266) and the Shandong Provincial Natural Science Foundation (ZR2024QF081).
 
 \section*{Data availability}
 
-Source code, installation instructions, documentation, example tomato FASTA inputs, model definitions, available checkpoint resources and provenance manifests are freely available at \url{https://github.com/Yaolab-fantastic/TPSGen}. The repository also provides the schemas and scripts required to reproduce the package-native example workflow. The tomato reference genome, annotation and expression resources used for model development and validation are identified in the Supplementary Information and should be obtained from their original public sources where redistribution is restricted.
+Source code, model resources and example workflows are available at
+\url{https://github.com/Yaolab-fantastic/TPSGen}. Genome, annotation and
+expression-data sources are listed in Supplementary Section S1.
+Data subject to redistribution restrictions should be obtained from their
+original sources.
 
+% Reference additions are provided in TPSGen_data_refs.bib.
 \bibliographystyle{oup-abbrvnat}
-\bibliography{references}
+\bibliography{references,TPSGen_data_refs}
 
 
 \end{document}

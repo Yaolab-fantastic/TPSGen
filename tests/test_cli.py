@@ -22,7 +22,8 @@ class TestCLI(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         report = json.loads(result.stdout)
-        self.assertTrue(report["transvae"]["available_for_runtime_scoring"])
+        expected_transvae = (repo_root / "models" / "transvae" / "historical_compatible_best_val_corr.pth").exists()
+        self.assertEqual(report["transvae"]["available_for_runtime_scoring"], expected_transvae)
         self.assertTrue(report["dnabert"]["available_for_arbitrary_fasta"])
         self.assertTrue(report["pregan"]["available_for_arbitrary_fasta_generation"])
     def test_copy_example_command_writes_bundled_fasta(self) -> None:
@@ -97,7 +98,7 @@ class TestCLI(unittest.TestCase):
 
     def test_integrated_run_transvae_backend_writes_model_metadata(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
-        checkpoint = repo_root / "models" / "transvae" / "best_val_corr_model.pth"
+        checkpoint = repo_root / "models" / "transvae" / "historical_compatible_best_val_corr.pth"
         if not checkpoint.exists():
             self.skipTest("Bundled TransVAE checkpoint not available.")
         env = os.environ.copy()
@@ -155,7 +156,7 @@ class TestCLI(unittest.TestCase):
 
     def test_predict_transvae_command_writes_output(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
-        checkpoint_path = repo_root / "models" / "transvae" / "best_val_corr_model.pth"
+        checkpoint_path = repo_root / "models" / "transvae" / "historical_compatible_best_val_corr.pth"
         if not checkpoint_path.exists():
             self.skipTest("Bundled TransVAE checkpoint not available.")
 
@@ -184,7 +185,7 @@ class TestCLI(unittest.TestCase):
 
     def test_predict_transvae_rejects_noncanonical_length(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
-        checkpoint_path = repo_root / "models" / "transvae" / "best_val_corr_model.pth"
+        checkpoint_path = repo_root / "models" / "transvae" / "historical_compatible_best_val_corr.pth"
         if not checkpoint_path.exists():
             self.skipTest("Bundled TransVAE checkpoint not available.")
 

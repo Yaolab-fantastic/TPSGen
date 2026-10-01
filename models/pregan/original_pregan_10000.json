@@ -1,0 +1,818 @@
+{
+  "architecture": "thesis_original_pregan",
+  "num_training_records": 4080,
+  "source_records": 5100,
+  "iterations": 10000,
+  "critic_updates_per_generator": 5,
+  "checkpoint": "models/pregan/original_pregan_10000.pt",
+  "history": [
+    {
+      "iteration": 1,
+      "generator_loss": 151301.15625,
+      "adversarial_loss": -1.2909969091415405,
+      "l1_loss": 17.14297103881836,
+      "predictor_loss": 151285.296875,
+      "critic_loss": 1.4501711487770081
+    },
+    {
+      "iteration": 100,
+      "generator_loss": 82672.21875,
+      "adversarial_loss": 9.419078826904297,
+      "l1_loss": 18.055952072143555,
+      "predictor_loss": 82644.7421875,
+      "critic_loss": -15.824717712402343
+    },
+    {
+      "iteration": 200,
+      "generator_loss": 104921.734375,
+      "adversarial_loss": 6.864659309387207,
+      "l1_loss": 18.460548400878906,
+      "predictor_loss": 104896.40625,
+      "critic_loss": -15.925459289550782
+    },
+    {
+      "iteration": 300,
+      "generator_loss": 65940.8046875,
+      "adversarial_loss": 3.4455838203430176,
+      "l1_loss": 18.24639320373535,
+      "predictor_loss": 65919.109375,
+      "critic_loss": -16.185212707519533
+    },
+    {
+      "iteration": 400,
+      "generator_loss": 6354.93701171875,
+      "adversarial_loss": 4.538888931274414,
+      "l1_loss": 18.036052703857422,
+      "predictor_loss": 6332.3623046875,
+      "critic_loss": -16.195697021484374
+    },
+    {
+      "iteration": 500,
+      "generator_loss": 182786.984375,
+      "adversarial_loss": 3.8851542472839355,
+      "l1_loss": 18.0393009185791,
+      "predictor_loss": 182765.0625,
+      "critic_loss": -16.273147583007812
+    },
+    {
+      "iteration": 600,
+      "generator_loss": 116476.59375,
+      "adversarial_loss": 5.309680461883545,
+      "l1_loss": 17.750764846801758,
+      "predictor_loss": 116453.53125,
+      "critic_loss": -16.245869827270507
+    },
+    {
+      "iteration": 700,
+      "generator_loss": 16011.931640625,
+      "adversarial_loss": 4.583258628845215,
+      "l1_loss": 18.38588523864746,
+      "predictor_loss": 15988.962890625,
+      "critic_loss": -16.39117431640625
+    },
+    {
+      "iteration": 800,
+      "generator_loss": 204030.328125,
+      "adversarial_loss": 6.356103897094727,
+      "l1_loss": 18.092758178710938,
+      "predictor_loss": 204005.875,
+      "critic_loss": -16.336502838134766
+    },
+    {
+      "iteration": 900,
+      "generator_loss": 11194.8095703125,
+      "adversarial_loss": 7.174893379211426,
+      "l1_loss": 17.90711784362793,
+      "predictor_loss": 11169.7275390625,
+      "critic_loss": -16.396358489990234
+    },
+    {
+      "iteration": 1000,
+      "generator_loss": 226688.78125,
+      "adversarial_loss": 8.51685619354248,
+      "l1_loss": 18.326459884643555,
+      "predictor_loss": 226661.9375,
+      "critic_loss": -16.46217155456543
+    },
+    {
+      "iteration": 1100,
+      "generator_loss": 43089.4296875,
+      "adversarial_loss": 6.487606048583984,
+      "l1_loss": 18.14753532409668,
+      "predictor_loss": 43064.79296875,
+      "critic_loss": -16.208816528320312
+    },
+    {
+      "iteration": 1200,
+      "generator_loss": 46305.1328125,
+      "adversarial_loss": 6.185481071472168,
+      "l1_loss": 18.167964935302734,
+      "predictor_loss": 46280.78125,
+      "critic_loss": -16.568671417236327
+    },
+    {
+      "iteration": 1300,
+      "generator_loss": 10867.462890625,
+      "adversarial_loss": 6.892457962036133,
+      "l1_loss": 17.896385192871094,
+      "predictor_loss": 10842.673828125,
+      "critic_loss": -16.24552116394043
+    },
+    {
+      "iteration": 1400,
+      "generator_loss": 148183.203125,
+      "adversarial_loss": 7.533692359924316,
+      "l1_loss": 17.991519927978516,
+      "predictor_loss": 148157.671875,
+      "critic_loss": -16.411986923217775
+    },
+    {
+      "iteration": 1500,
+      "generator_loss": 12547.2841796875,
+      "adversarial_loss": 8.90852165222168,
+      "l1_loss": 18.042558670043945,
+      "predictor_loss": 12520.3330078125,
+      "critic_loss": -16.430302810668945
+    },
+    {
+      "iteration": 1600,
+      "generator_loss": 93001.421875,
+      "adversarial_loss": 9.476937294006348,
+      "l1_loss": 17.87001609802246,
+      "predictor_loss": 92974.078125,
+      "critic_loss": -16.18138256072998
+    },
+    {
+      "iteration": 1700,
+      "generator_loss": 46692.48828125,
+      "adversarial_loss": 7.546438694000244,
+      "l1_loss": 17.88100814819336,
+      "predictor_loss": 46667.0625,
+      "critic_loss": -16.573337173461915
+    },
+    {
+      "iteration": 1800,
+      "generator_loss": 646164.9375,
+      "adversarial_loss": 7.244319915771484,
+      "l1_loss": 18.172697067260742,
+      "predictor_loss": 646139.5,
+      "critic_loss": -16.437329483032226
+    },
+    {
+      "iteration": 1900,
+      "generator_loss": 20127.671875,
+      "adversarial_loss": 7.870894908905029,
+      "l1_loss": 17.99235725402832,
+      "predictor_loss": 20101.80859375,
+      "critic_loss": -16.476118087768555
+    },
+    {
+      "iteration": 2000,
+      "generator_loss": 256603.375,
+      "adversarial_loss": 6.961361885070801,
+      "l1_loss": 18.374412536621094,
+      "predictor_loss": 256578.046875,
+      "critic_loss": -16.368306350708007
+    },
+    {
+      "iteration": 2100,
+      "generator_loss": 57066.07421875,
+      "adversarial_loss": 6.917917251586914,
+      "l1_loss": 18.169849395751953,
+      "predictor_loss": 57040.98828125,
+      "critic_loss": -16.55659713745117
+    },
+    {
+      "iteration": 2200,
+      "generator_loss": 802.0147094726562,
+      "adversarial_loss": 7.262235164642334,
+      "l1_loss": 18.158103942871094,
+      "predictor_loss": 776.5943603515625,
+      "critic_loss": -16.246741676330565
+    },
+    {
+      "iteration": 2300,
+      "generator_loss": 18332.919921875,
+      "adversarial_loss": 7.940087795257568,
+      "l1_loss": 17.776836395263672,
+      "predictor_loss": 18307.203125,
+      "critic_loss": -16.518334579467773
+    },
+    {
+      "iteration": 2400,
+      "generator_loss": 28526.939453125,
+      "adversarial_loss": 7.441740989685059,
+      "l1_loss": 18.073495864868164,
+      "predictor_loss": 28501.423828125,
+      "critic_loss": -16.466859436035158
+    },
+    {
+      "iteration": 2500,
+      "generator_loss": 51830.4765625,
+      "adversarial_loss": 6.382346153259277,
+      "l1_loss": 18.10841941833496,
+      "predictor_loss": 51805.984375,
+      "critic_loss": -16.518329620361328
+    },
+    {
+      "iteration": 2600,
+      "generator_loss": 159493.40625,
+      "adversarial_loss": 7.088581085205078,
+      "l1_loss": 18.35498809814453,
+      "predictor_loss": 159467.96875,
+      "critic_loss": -16.44413948059082
+    },
+    {
+      "iteration": 2700,
+      "generator_loss": 36105.421875,
+      "adversarial_loss": 7.537436485290527,
+      "l1_loss": 18.057662963867188,
+      "predictor_loss": 36079.828125,
+      "critic_loss": -16.281773376464844
+    },
+    {
+      "iteration": 2800,
+      "generator_loss": 11011.2744140625,
+      "adversarial_loss": 8.819780349731445,
+      "l1_loss": 18.15542221069336,
+      "predictor_loss": 10984.298828125,
+      "critic_loss": -16.5153751373291
+    },
+    {
+      "iteration": 2900,
+      "generator_loss": 107234.9453125,
+      "adversarial_loss": 9.10728931427002,
+      "l1_loss": 18.205602645874023,
+      "predictor_loss": 107207.6328125,
+      "critic_loss": -16.505134963989256
+    },
+    {
+      "iteration": 3000,
+      "generator_loss": 932219.1875,
+      "adversarial_loss": 8.490720748901367,
+      "l1_loss": 18.06795310974121,
+      "predictor_loss": 932192.625,
+      "critic_loss": -16.508087158203125
+    },
+    {
+      "iteration": 3100,
+      "generator_loss": 28013.50390625,
+      "adversarial_loss": 8.893054962158203,
+      "l1_loss": 18.127126693725586,
+      "predictor_loss": 27986.484375,
+      "critic_loss": -16.435345458984376
+    },
+    {
+      "iteration": 3200,
+      "generator_loss": 41285.8203125,
+      "adversarial_loss": 8.410734176635742,
+      "l1_loss": 18.411487579345703,
+      "predictor_loss": 41259.0,
+      "critic_loss": -16.632164001464844
+    },
+    {
+      "iteration": 3300,
+      "generator_loss": 90341.1171875,
+      "adversarial_loss": 7.920758247375488,
+      "l1_loss": 17.954809188842773,
+      "predictor_loss": 90315.2421875,
+      "critic_loss": -16.51181297302246
+    },
+    {
+      "iteration": 3400,
+      "generator_loss": 4809.130859375,
+      "adversarial_loss": 7.271368026733398,
+      "l1_loss": 17.860206604003906,
+      "predictor_loss": 4783.99951171875,
+      "critic_loss": -16.478072738647462
+    },
+    {
+      "iteration": 3500,
+      "generator_loss": 114836.6171875,
+      "adversarial_loss": 9.249731063842773,
+      "l1_loss": 17.94693374633789,
+      "predictor_loss": 114809.421875,
+      "critic_loss": -16.486523818969726
+    },
+    {
+      "iteration": 3600,
+      "generator_loss": 292961.09375,
+      "adversarial_loss": 9.599568367004395,
+      "l1_loss": 18.41434097290039,
+      "predictor_loss": 292933.09375,
+      "critic_loss": -16.58436813354492
+    },
+    {
+      "iteration": 3700,
+      "generator_loss": 22609.625,
+      "adversarial_loss": 9.658924102783203,
+      "l1_loss": 18.1892032623291,
+      "predictor_loss": 22581.77734375,
+      "critic_loss": -16.454359436035155
+    },
+    {
+      "iteration": 3800,
+      "generator_loss": 370435.1875,
+      "adversarial_loss": 9.215961456298828,
+      "l1_loss": 17.952301025390625,
+      "predictor_loss": 370408.03125,
+      "critic_loss": -16.57310562133789
+    },
+    {
+      "iteration": 3900,
+      "generator_loss": 25385.921875,
+      "adversarial_loss": 10.286531448364258,
+      "l1_loss": 18.184951782226562,
+      "predictor_loss": 25357.451171875,
+      "critic_loss": -16.591879653930665
+    },
+    {
+      "iteration": 4000,
+      "generator_loss": 17776.701171875,
+      "adversarial_loss": 8.095672607421875,
+      "l1_loss": 18.39165496826172,
+      "predictor_loss": 17750.212890625,
+      "critic_loss": -16.77116241455078
+    },
+    {
+      "iteration": 4100,
+      "generator_loss": 11642.1533203125,
+      "adversarial_loss": 9.035761833190918,
+      "l1_loss": 17.811792373657227,
+      "predictor_loss": 11615.3056640625,
+      "critic_loss": -16.3861026763916
+    },
+    {
+      "iteration": 4200,
+      "generator_loss": 53166.69921875,
+      "adversarial_loss": 11.696640968322754,
+      "l1_loss": 17.98710823059082,
+      "predictor_loss": 53137.015625,
+      "critic_loss": -16.624255752563478
+    },
+    {
+      "iteration": 4300,
+      "generator_loss": 57846.0859375,
+      "adversarial_loss": 10.522785186767578,
+      "l1_loss": 18.186908721923828,
+      "predictor_loss": 57817.375,
+      "critic_loss": -16.65148048400879
+    },
+    {
+      "iteration": 4400,
+      "generator_loss": 11010.744140625,
+      "adversarial_loss": 8.771825790405273,
+      "l1_loss": 18.183181762695312,
+      "predictor_loss": 10983.7890625,
+      "critic_loss": -16.36816520690918
+    },
+    {
+      "iteration": 4500,
+      "generator_loss": 155182.171875,
+      "adversarial_loss": 6.983976364135742,
+      "l1_loss": 18.4708251953125,
+      "predictor_loss": 155156.71875,
+      "critic_loss": -16.165653800964357
+    },
+    {
+      "iteration": 4600,
+      "generator_loss": 22783.685546875,
+      "adversarial_loss": 5.558164596557617,
+      "l1_loss": 18.271663665771484,
+      "predictor_loss": 22759.85546875,
+      "critic_loss": -16.34148406982422
+    },
+    {
+      "iteration": 4700,
+      "generator_loss": 111483.90625,
+      "adversarial_loss": 7.560318470001221,
+      "l1_loss": 18.32305335998535,
+      "predictor_loss": 111458.0234375,
+      "critic_loss": -16.487790679931642
+    },
+    {
+      "iteration": 4800,
+      "generator_loss": 73636.78125,
+      "adversarial_loss": 8.695451736450195,
+      "l1_loss": 18.190183639526367,
+      "predictor_loss": 73609.8984375,
+      "critic_loss": -16.157302474975587
+    },
+    {
+      "iteration": 4900,
+      "generator_loss": 94983.453125,
+      "adversarial_loss": 6.101809501647949,
+      "l1_loss": 18.3355655670166,
+      "predictor_loss": 94959.015625,
+      "critic_loss": -16.55801467895508
+    },
+    {
+      "iteration": 5000,
+      "generator_loss": 76211.9453125,
+      "adversarial_loss": 7.485620498657227,
+      "l1_loss": 18.13273048400879,
+      "predictor_loss": 76186.328125,
+      "critic_loss": -16.245072174072266
+    },
+    {
+      "iteration": 5100,
+      "generator_loss": 27751.943359375,
+      "adversarial_loss": 7.167625427246094,
+      "l1_loss": 18.32959747314453,
+      "predictor_loss": 27726.4453125,
+      "critic_loss": -16.465156173706056
+    },
+    {
+      "iteration": 5200,
+      "generator_loss": 33768.4375,
+      "adversarial_loss": 9.124740600585938,
+      "l1_loss": 17.96986198425293,
+      "predictor_loss": 33741.34375,
+      "critic_loss": -16.465224075317384
+    },
+    {
+      "iteration": 5300,
+      "generator_loss": 88426.5546875,
+      "adversarial_loss": 7.759488582611084,
+      "l1_loss": 18.038497924804688,
+      "predictor_loss": 88400.7578125,
+      "critic_loss": -16.41778144836426
+    },
+    {
+      "iteration": 5400,
+      "generator_loss": 10005.4541015625,
+      "adversarial_loss": 6.857806205749512,
+      "l1_loss": 18.0212459564209,
+      "predictor_loss": 9980.5751953125,
+      "critic_loss": -16.415678405761717
+    },
+    {
+      "iteration": 5500,
+      "generator_loss": 275126.375,
+      "adversarial_loss": 10.65142822265625,
+      "l1_loss": 18.313806533813477,
+      "predictor_loss": 275097.40625,
+      "critic_loss": -16.291447830200195
+    },
+    {
+      "iteration": 5600,
+      "generator_loss": 6178.31103515625,
+      "adversarial_loss": 9.402656555175781,
+      "l1_loss": 18.041168212890625,
+      "predictor_loss": 6150.8671875,
+      "critic_loss": -16.384944915771484
+    },
+    {
+      "iteration": 5700,
+      "generator_loss": 43788.08984375,
+      "adversarial_loss": 9.991164207458496,
+      "l1_loss": 18.302223205566406,
+      "predictor_loss": 43759.796875,
+      "critic_loss": -16.387398147583006
+    },
+    {
+      "iteration": 5800,
+      "generator_loss": 28841.05859375,
+      "adversarial_loss": 8.5365629196167,
+      "l1_loss": 18.065366744995117,
+      "predictor_loss": 28814.45703125,
+      "critic_loss": -16.32167854309082
+    },
+    {
+      "iteration": 5900,
+      "generator_loss": 13430.8828125,
+      "adversarial_loss": 8.991806030273438,
+      "l1_loss": 18.216354370117188,
+      "predictor_loss": 13403.6748046875,
+      "critic_loss": -16.38854522705078
+    },
+    {
+      "iteration": 6000,
+      "generator_loss": 3244.471923828125,
+      "adversarial_loss": 8.435037612915039,
+      "l1_loss": 18.17715072631836,
+      "predictor_loss": 3217.859619140625,
+      "critic_loss": -16.477639389038085
+    },
+    {
+      "iteration": 6100,
+      "generator_loss": 23561.45703125,
+      "adversarial_loss": 9.982421875,
+      "l1_loss": 18.1861629486084,
+      "predictor_loss": 23533.2890625,
+      "critic_loss": -16.44365005493164
+    },
+    {
+      "iteration": 6200,
+      "generator_loss": 76151.734375,
+      "adversarial_loss": 10.559375762939453,
+      "l1_loss": 18.107894897460938,
+      "predictor_loss": 76123.0703125,
+      "critic_loss": -16.478425598144533
+    },
+    {
+      "iteration": 6300,
+      "generator_loss": 25569.1796875,
+      "adversarial_loss": 7.47951078414917,
+      "l1_loss": 18.08607292175293,
+      "predictor_loss": 25543.61328125,
+      "critic_loss": -16.57760887145996
+    },
+    {
+      "iteration": 6400,
+      "generator_loss": 577.1734008789062,
+      "adversarial_loss": 8.967012405395508,
+      "l1_loss": 17.753604888916016,
+      "predictor_loss": 550.4527587890625,
+      "critic_loss": -16.404482269287108
+    },
+    {
+      "iteration": 6500,
+      "generator_loss": 36363.43359375,
+      "adversarial_loss": 8.11895751953125,
+      "l1_loss": 17.932605743408203,
+      "predictor_loss": 36337.3828125,
+      "critic_loss": -16.569254302978514
+    },
+    {
+      "iteration": 6600,
+      "generator_loss": 9205.9423828125,
+      "adversarial_loss": 9.444982528686523,
+      "l1_loss": 18.47208595275879,
+      "predictor_loss": 9178.025390625,
+      "critic_loss": -16.35000343322754
+    },
+    {
+      "iteration": 6700,
+      "generator_loss": 31679.984375,
+      "adversarial_loss": 9.633173942565918,
+      "l1_loss": 18.213943481445312,
+      "predictor_loss": 31652.13671875,
+      "critic_loss": -16.693596649169923
+    },
+    {
+      "iteration": 6800,
+      "generator_loss": 91918.5625,
+      "adversarial_loss": 10.357494354248047,
+      "l1_loss": 18.287281036376953,
+      "predictor_loss": 91889.9140625,
+      "critic_loss": -16.47955894470215
+    },
+    {
+      "iteration": 6900,
+      "generator_loss": 40015.9375,
+      "adversarial_loss": 11.11868953704834,
+      "l1_loss": 18.094100952148438,
+      "predictor_loss": 39986.7265625,
+      "critic_loss": -16.550758361816406
+    },
+    {
+      "iteration": 7000,
+      "generator_loss": 761105.6875,
+      "adversarial_loss": 8.779718399047852,
+      "l1_loss": 18.03511619567871,
+      "predictor_loss": 761078.875,
+      "critic_loss": -16.402286529541016
+    },
+    {
+      "iteration": 7100,
+      "generator_loss": 309231.90625,
+      "adversarial_loss": 10.897897720336914,
+      "l1_loss": 18.147186279296875,
+      "predictor_loss": 309202.875,
+      "critic_loss": -16.39366683959961
+    },
+    {
+      "iteration": 7200,
+      "generator_loss": 574646.125,
+      "adversarial_loss": 11.355061531066895,
+      "l1_loss": 18.257360458374023,
+      "predictor_loss": 574616.5,
+      "critic_loss": -16.49063148498535
+    },
+    {
+      "iteration": 7300,
+      "generator_loss": 140650.78125,
+      "adversarial_loss": 9.447053909301758,
+      "l1_loss": 18.05160903930664,
+      "predictor_loss": 140623.28125,
+      "critic_loss": -16.543402099609374
+    },
+    {
+      "iteration": 7400,
+      "generator_loss": 66832.7109375,
+      "adversarial_loss": 10.13876724243164,
+      "l1_loss": 18.04401206970215,
+      "predictor_loss": 66804.53125,
+      "critic_loss": -16.6170597076416
+    },
+    {
+      "iteration": 7500,
+      "generator_loss": 55144.4453125,
+      "adversarial_loss": 10.550682067871094,
+      "l1_loss": 18.17717170715332,
+      "predictor_loss": 55115.71875,
+      "critic_loss": -16.516704177856447
+    },
+    {
+      "iteration": 7600,
+      "generator_loss": 267960.96875,
+      "adversarial_loss": 10.091133117675781,
+      "l1_loss": 18.370460510253906,
+      "predictor_loss": 267932.5,
+      "critic_loss": -16.334228134155275
+    },
+    {
+      "iteration": 7700,
+      "generator_loss": 5766.3447265625,
+      "adversarial_loss": 9.35334300994873,
+      "l1_loss": 18.140220642089844,
+      "predictor_loss": 5738.85107421875,
+      "critic_loss": -16.389805221557616
+    },
+    {
+      "iteration": 7800,
+      "generator_loss": 144004.625,
+      "adversarial_loss": 11.788606643676758,
+      "l1_loss": 18.182880401611328,
+      "predictor_loss": 143974.65625,
+      "critic_loss": -16.4634147644043
+    },
+    {
+      "iteration": 7900,
+      "generator_loss": 77991.8203125,
+      "adversarial_loss": 9.436983108520508,
+      "l1_loss": 17.988616943359375,
+      "predictor_loss": 77964.3984375,
+      "critic_loss": -16.492628860473634
+    },
+    {
+      "iteration": 8000,
+      "generator_loss": 147080.375,
+      "adversarial_loss": 9.447494506835938,
+      "l1_loss": 18.064550399780273,
+      "predictor_loss": 147052.859375,
+      "critic_loss": -16.696116256713868
+    },
+    {
+      "iteration": 8100,
+      "generator_loss": 180783.6875,
+      "adversarial_loss": 11.950315475463867,
+      "l1_loss": 18.362436294555664,
+      "predictor_loss": 180753.375,
+      "critic_loss": -16.631476211547852
+    },
+    {
+      "iteration": 8200,
+      "generator_loss": 157587.765625,
+      "adversarial_loss": 10.922487258911133,
+      "l1_loss": 17.89360237121582,
+      "predictor_loss": 157558.953125,
+      "critic_loss": -16.40254020690918
+    },
+    {
+      "iteration": 8300,
+      "generator_loss": 203171.796875,
+      "adversarial_loss": 10.97233772277832,
+      "l1_loss": 18.040462493896484,
+      "predictor_loss": 203142.78125,
+      "critic_loss": -16.450105285644533
+    },
+    {
+      "iteration": 8400,
+      "generator_loss": 72420.7734375,
+      "adversarial_loss": 9.743175506591797,
+      "l1_loss": 18.097822189331055,
+      "predictor_loss": 72392.9296875,
+      "critic_loss": -16.50561065673828
+    },
+    {
+      "iteration": 8500,
+      "generator_loss": 107832.4765625,
+      "adversarial_loss": 10.788187980651855,
+      "l1_loss": 18.147525787353516,
+      "predictor_loss": 107803.5390625,
+      "critic_loss": -16.486893081665038
+    },
+    {
+      "iteration": 8600,
+      "generator_loss": 43430.71875,
+      "adversarial_loss": 11.597145080566406,
+      "l1_loss": 18.105140686035156,
+      "predictor_loss": 43401.015625,
+      "critic_loss": -16.58999137878418
+    },
+    {
+      "iteration": 8700,
+      "generator_loss": 23143.953125,
+      "adversarial_loss": 11.115669250488281,
+      "l1_loss": 18.082094192504883,
+      "predictor_loss": 23114.755859375,
+      "critic_loss": -16.467562103271483
+    },
+    {
+      "iteration": 8800,
+      "generator_loss": 15333.4111328125,
+      "adversarial_loss": 9.144536972045898,
+      "l1_loss": 17.85688018798828,
+      "predictor_loss": 15306.41015625,
+      "critic_loss": -16.45541763305664
+    },
+    {
+      "iteration": 8900,
+      "generator_loss": 27675.91015625,
+      "adversarial_loss": 9.524120330810547,
+      "l1_loss": 18.15329360961914,
+      "predictor_loss": 27648.232421875,
+      "critic_loss": -16.5482479095459
+    },
+    {
+      "iteration": 9000,
+      "generator_loss": 471258.78125,
+      "adversarial_loss": 10.08523178100586,
+      "l1_loss": 18.20977210998535,
+      "predictor_loss": 471230.5,
+      "critic_loss": -16.469397735595702
+    },
+    {
+      "iteration": 9100,
+      "generator_loss": 431475.5625,
+      "adversarial_loss": 11.056020736694336,
+      "l1_loss": 17.902524948120117,
+      "predictor_loss": 431446.59375,
+      "critic_loss": -16.538153839111327
+    },
+    {
+      "iteration": 9200,
+      "generator_loss": 95144.90625,
+      "adversarial_loss": 10.113649368286133,
+      "l1_loss": 18.23963737487793,
+      "predictor_loss": 95116.5546875,
+      "critic_loss": -16.05948486328125
+    },
+    {
+      "iteration": 9300,
+      "generator_loss": 778360.0,
+      "adversarial_loss": 10.390678405761719,
+      "l1_loss": 18.12662124633789,
+      "predictor_loss": 778331.5,
+      "critic_loss": -16.291983795166015
+    },
+    {
+      "iteration": 9400,
+      "generator_loss": 14029.1376953125,
+      "adversarial_loss": 9.441974639892578,
+      "l1_loss": 18.37161636352539,
+      "predictor_loss": 14001.32421875,
+      "critic_loss": -16.44345817565918
+    },
+    {
+      "iteration": 9500,
+      "generator_loss": 195430.84375,
+      "adversarial_loss": 8.565393447875977,
+      "l1_loss": 18.352693557739258,
+      "predictor_loss": 195403.921875,
+      "critic_loss": -16.322263717651367
+    },
+    {
+      "iteration": 9600,
+      "generator_loss": 409447.78125,
+      "adversarial_loss": 10.340800285339355,
+      "l1_loss": 18.239091873168945,
+      "predictor_loss": 409419.1875,
+      "critic_loss": -16.437802124023438
+    },
+    {
+      "iteration": 9700,
+      "generator_loss": 17183.689453125,
+      "adversarial_loss": 8.084988594055176,
+      "l1_loss": 18.036104202270508,
+      "predictor_loss": 17157.568359375,
+      "critic_loss": -16.41862678527832
+    },
+    {
+      "iteration": 9800,
+      "generator_loss": 27839.45703125,
+      "adversarial_loss": 8.769676208496094,
+      "l1_loss": 17.944265365600586,
+      "predictor_loss": 27812.7421875,
+      "critic_loss": -16.366325759887694
+    },
+    {
+      "iteration": 9900,
+      "generator_loss": 17962.53125,
+      "adversarial_loss": 8.331657409667969,
+      "l1_loss": 18.302963256835938,
+      "predictor_loss": 17935.896484375,
+      "critic_loss": -16.33827934265137
+    },
+    {
+      "iteration": 10000,
+      "generator_loss": 18888.083984375,
+      "adversarial_loss": 7.971100807189941,
+      "l1_loss": 17.928369522094727,
+      "predictor_loss": 18862.18359375,
+      "critic_loss": -16.347937774658202
+    }
+  ]
+}

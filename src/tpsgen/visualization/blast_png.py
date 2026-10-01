@@ -206,13 +206,13 @@ def render_blast_histogram(
     legend_y = plot_top + 28
     legend_width = 520
     legend_height = 72 + 64 * len(include_groups)
-    draw.rounded_rectangle(
-        [legend_x, legend_y, legend_x + legend_width, legend_y + legend_height],
-        radius=18,
-        outline="#d0d0d0",
-        width=3,
-        fill="white",
-    )
+    legend_box = [legend_x, legend_y, legend_x + legend_width, legend_y + legend_height]
+    if hasattr(draw, "rounded_rectangle"):
+        draw.rounded_rectangle(
+            legend_box, radius=18, outline="#d0d0d0", width=3, fill="white"
+        )
+    else:
+        draw.rectangle(legend_box, outline="#d0d0d0", width=3, fill="white")
     draw.text((legend_x + 24, legend_y + 18), "Group", font=legend_title_font, fill="black")
     for index, group in enumerate(include_groups):
         row_y = legend_y + 84 + index * 64

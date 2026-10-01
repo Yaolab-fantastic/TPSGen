@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 from tpsgen.io.csv import write_dict_rows
@@ -16,14 +17,31 @@ from tpsgen.visualization.svg import (
 )
 
 
-def _compute_tau(values: dict[str, float]) -> tuple[float | None, str]:
-    """Compute tau only on the domain used by its stated interpretation."""
-    maximum = max(values.values())
+def _compute_tau(
+    values: dict[str, float],
+    *,
+    input_scale: str = "linear",
+) -> tuple[float | None, str]:
+    """Compute tau on non-negative values in the stated expression scale."""
+    if not values or any(not math.isfinite(value) for value in values.values()):
+        return None, "scores_must_be_finite"
+    if input_scale == "linear":
+        tau_values = values
+    elif input_scale == "log1p":
+        tau_values = {key: math.expm1(value) for key, value in values.items()}
+    else:
+        raise ValueError(f"Unsupported tau input scale: {input_scale}")
+
+    maximum = max(tau_values.values())
     if maximum <= 0:
         return None, "maximum_score_must_be_positive"
-    if any(value < 0 for value in values.values()):
+    if any(value < 0 for value in tau_values.values()):
         return None, "scores_must_be_non_negative"
-    return round(sum(1.0 - value / maximum for value in values.values()) / 3.0, 4), "valid"
+    denominator = len(tau_values) - 1
+    if denominator <= 0:
+        return None, "at_least_two_scores_required"
+    tau = sum(1.0 - value / maximum for value in tau_values.values()) / denominator
+    return round(tau, 4), "valid"
 
 
 def run_integrated_workflow(
@@ -113,12 +131,15 @@ def run_integrated_workflow(
         values = {tissue: float(row[f"score_{tissue}"]) for tissue in ("root", "stem", "leaf", "fruit")}
         target_value = values[target_tissue]
         runner_up = max(value for tissue, value in values.items() if tissue != target_tissue)
-        tau, tau_status = _compute_tau(values)
+        tau_input_scale = "log1p" if scoring_backend == "transvae" else "linear"
+        tau, tau_status = _compute_tau(values, input_scale=tau_input_scale)
         # tau is a descriptive concentration index; retain raw scores and validity.
         row["target_tissue"] = target_tissue
         row["target_bias_margin"] = round(target_value - runner_up, 4)
         row["tau"] = tau
         row["tau_status"] = tau_status
+        row["tau_input_scale"] = tau_input_scale
+        row["tau_score_transform"] = "expm1" if tau_input_scale == "log1p" else "none"
         row["preferred_tissue"] = max(values, key=values.get)
         return row
 
@@ -265,11 +286,18 @@ def run_integrated_workflow(
                 "checkpoint_used": scoring_backend == "transvae",
                 "score_definition": "ranking score, not calibrated expression" if scoring_backend == "native" else "TransVAE four-tissue model score; scale is checkpoint-specific",
                 "input_preprocessing": {
-                    "encoder_source_length": 164,
-                    "last_base_used_by_encoder": False,
-                    "mask_token_alias": "A (token 0)",
+                    "policy": "full_length",
+                    "encoder_source_length": 165,
+                    "last_base_used_by_encoder": True,
+                    "nucleotide_positions_are_attention_keys": True,
                     "requires_training_match": True,
                 } if scoring_backend == "transvae" else None,
+                "tau_definition": {
+                    "input_scale": "linear" if scoring_backend == "native" else "inverse_log1p_expression",
+                    "transform": "none" if scoring_backend == "native" else "expm1",
+                    "valid_domain": "finite non-negative values with a positive maximum",
+                    "preferred_tissue_reported_separately": True,
+                },
                 "final_candidate_selection": (
                     "optional target-bias margin filter, then highest target-tissue "
                     "score; use margin as the tie-breaker"
@@ -290,14 +318,14 @@ def run_integrated_workflow(
             "pregan": {
                 "status": "explicit_generator_route_available; historical_quantitative_and_biological_validation_not_established",
                 "not_used_by_default_run": True,
-                "resource": "models/pregan/generator_checkpoint.pt",
-                "training_records": 5100,
-                "training_steps": 1000,
+                "resource": "models/pregan/original_pregan_10000.pt",
+                "training_records": 4080,
+                "training_steps": 10000,
             },
             "transvae": {
                 "status": "available_as_optional_scoring_backend",
                 "not_used_by_default_run": scoring_backend != "transvae",
-                "resource": "models/transvae/full_length_joint_model.pth",
+                "resource": "models/transvae/historical_compatible_best_val_corr.pth",
             },
         },
         "files": {

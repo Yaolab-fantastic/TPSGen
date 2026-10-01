@@ -7,7 +7,7 @@ name = "tpsgen"
 version = "0.2.0"
 description = "Integrated motif-aware design of tissue-biased tomato promoters."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = {file = "LICENSE"}
 authors = [
   {name = "TPSGen Authors"}
@@ -47,7 +47,8 @@ where = ["src"]
 
 [tool.setuptools.data-files]
 "share/tpsgen/models/transvae" = [
-  "models/transvae/best_val_corr_model.pth"
+  "models/transvae/historical_compatible_best_val_corr.pth",
+  "models/transvae/full_length_joint_model.pth"
 ]
 "share/tpsgen/models/dnabert" = [
   "models/dnabert/pytorch_model.bin",
@@ -61,7 +62,8 @@ where = ["src"]
   "models/pregan_expression/SeqRegressionModel.py"
 ]
 "share/tpsgen/models/pregan" = [
-  "models/pregan/generator_checkpoint.pt"
+  "models/pregan/original_pregan_10000.pt",
+  "models/pregan/original_pregan_10000.json"
 ]
 "share/tpsgen/configs" = [
   "configs/training_transvae.yaml"
@@ -71,5 +73,6 @@ where = ["src"]
   "examples/expected_output.csv"
 ]
 "share/tpsgen" = [
-  "RESOURCE_LICENSES.md"
+  "RESOURCE_LICENSES.md",
+  "models/weights_manifest.json"
 ]

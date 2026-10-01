@@ -1,0 +1,2 @@
+models/dnabert/pytorch_model.bin filter=lfs diff=lfs merge=lfs -text
+models/pregan/original_pregan_10000.pt filter=lfs diff=lfs merge=lfs -text

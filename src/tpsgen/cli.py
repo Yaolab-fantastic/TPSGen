@@ -99,6 +99,10 @@ def build_parser() -> argparse.ArgumentParser:
     run_pregan.add_argument("--checkpoint", required=True)
     run_pregan.add_argument("--candidates", type=int, default=5)
     run_pregan.add_argument("--target", choices=["root", "stem", "leaf", "fruit"], default="fruit")
+    run_pregan.add_argument("--min-margin", type=float, default=0.0)
+    run_pregan.add_argument("--min-tau", type=float, default=0.7)
+    run_pregan.add_argument("--adaptive-tau-floor", type=float, default=0.05)
+    run_pregan.add_argument("--strict-tau", action="store_true", help="Disable adaptive fallback below --min-tau.")
     run_pregan.add_argument("--seed", type=int, default=42)
     run_pregan.add_argument("--output", required=True, help="Output directory.")
 
@@ -262,9 +266,9 @@ def main(argv: list[str] | None = None) -> int:
 
         repo_root = repository_root()
         model_root = repo_root / "models"
-        transvae = model_root / "transvae" / "full_length_joint_model.pth"
+        transvae = model_root / "transvae" / "historical_compatible_best_val_corr.pth"
         dnabert = model_root / "dnabert" / "pytorch_model.bin"
-        pregan_generator = model_root / "pregan" / "generator_checkpoint.pt"
+        pregan_generator = model_root / "pregan" / "original_pregan_10000.pt"
         pregan = model_root / "pregan_expression" / "165_mpra_expr_denselstm.pth"
         report = {
             "transvae": {
@@ -287,8 +291,8 @@ def main(argv: list[str] | None = None) -> int:
                 "available_for_arbitrary_fasta_generation": pregan_generator.exists(),
                 "route": "pregan-generate" if pregan_generator.exists() else None,
                 "checkpoint": str(pregan_generator),
-                "training_records": 5100 if pregan_generator.exists() else None,
-                "training_steps": 1000 if pregan_generator.exists() else None,
+                "training_records": 4080 if pregan_generator.exists() else None,
+                "training_steps": 10000 if pregan_generator.exists() else None,
                 "reason": "Checkpoint is available for computational generation; external biological validation remains required.",
             },
         }
@@ -310,12 +314,17 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "pregan-generate":
-        from tpsgen.training.pregan import generate_pregan_candidates
-
         records = read_fasta(args.input)
         templates = [record.sequence for record in records]
         try:
-            rows = generate_pregan_candidates(templates, args.checkpoint, args.candidates, args.seed)
+            import torch
+            payload = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
+            if payload.get("architecture") == "thesis_original_pregan":
+                from tpsgen.legacy.pregan_original import generate_original_candidates
+                rows = generate_original_candidates(templates, args.checkpoint, args.candidates, args.seed)
+            else:
+                from tpsgen.training.pregan import generate_pregan_candidates
+                rows = generate_pregan_candidates(templates, args.checkpoint, args.candidates, args.seed)
         except (FileNotFoundError, ValueError, RuntimeError) as error:
             parser.error(str(error))
         for row, record in zip(rows, [record for record in records for _ in range(args.candidates)]):
@@ -337,7 +346,12 @@ def main(argv: list[str] | None = None) -> int:
 
         records = read_fasta(args.input)
         try:
-            manifest = run_pregan_workflow(records, args.checkpoint, args.candidates, args.seed, args.output, args.target)
+            manifest = run_pregan_workflow(
+                records, args.checkpoint, args.candidates, args.seed, args.output,
+                args.target, min_margin=args.min_margin, min_tau=args.min_tau,
+                adaptive_tau=not args.strict_tau,
+                adaptive_tau_floor=args.adaptive_tau_floor,
+            )
         except (FileNotFoundError, ValueError, RuntimeError, ModuleNotFoundError) as error:
             parser.error(str(error))
         print(json.dumps(manifest, indent=2))

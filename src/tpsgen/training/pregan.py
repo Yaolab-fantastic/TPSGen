@@ -17,14 +17,14 @@ BASE_TO_INDEX = {base: index for index, base in enumerate(BASES)}
 MASK_SYMBOL = "M"
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class MaskedPromoterExample:
     template: str
     target_sequence: str
     expression: float
 
 
-@dataclass(slots=True)
+@dataclass
 class PreGANSmokeConfig:
     input_csv: str = "data/raw/pregan_expression/pregan_smoke.csv"
     output_checkpoint: str = "tmp/pregan_smoke_checkpoint.pt"
@@ -35,10 +35,13 @@ class PreGANSmokeConfig:
     noise_channels: int = 16
     hidden_channels: int = 64
     learning_rate: float = 0.0001
-    reconstruction_weight: float = 1.0
-    expression_weight: float = 0.0001
+    reconstruction_weight: float = 50.0
+    expression_weight: float = 1.0
     homopolymer_weight: float = 1.0
     gradient_penalty_weight: float = 10.0
+    critic_updates: int = 5
+    checkpoint_interval: int = 100
+    snapshot_dir: str | None = None
     seed: int = 42
     device: str = "cpu"
 
@@ -250,9 +253,19 @@ def sample_noise(batch_size: int, noise_channels: int, length: int, device: torc
 
 
 def freeze_predictor(predictor: nn.Module) -> nn.Module:
+    """Freeze predictor weights while retaining input-gradient support.
+
+    Batch-normalization and dropout layers remain in evaluation mode so the
+    expression constraint is deterministic and its running statistics are not
+    modified. cuDNN RNN modules must, however, remain in training mode when
+    gradients are propagated through their inputs to the generator.
+    """
     predictor.eval()
     for parameter in predictor.parameters():
         parameter.requires_grad_(False)
+    for module in predictor.modules():
+        if isinstance(module, nn.RNNBase):
+            module.train()
     return predictor
 
 
@@ -319,7 +332,39 @@ def generator_loss(
     return adversarial + reconstruction_weight * reconstruction + expression_weight * expression + homopolymer_weight * five_run
 
 
-def run_pregan_smoke_training(config: PreGANSmokeConfig, predictor: nn.Module) -> dict[str, object]:
+def _next_batch(iterator, loader):
+    try:
+        return next(iterator), iterator
+    except StopIteration:
+        iterator = iter(loader)
+        return next(iterator), iterator
+
+
+def _save_training_snapshot(
+    snapshot_dir: Path, step: int, generator: ConditionalGenerator,
+    discriminator: ConditionalDiscriminator, config: PreGANSmokeConfig,
+    mutable_mask: torch.Tensor, fake_sequence: torch.Tensor,
+) -> None:
+    snapshot_dir.mkdir(parents=True, exist_ok=True)
+    torch.save({
+        "generator_state_dict": generator.state_dict(),
+        "discriminator_state_dict": discriminator.state_dict(),
+        "config": asdict(config),
+        "generator_iteration": step,
+    }, snapshot_dir / f"pregan_iteration_{step:05d}.pt")
+    with (snapshot_dir / f"pregan_iteration_{step:05d}_sequences.csv").open(
+        "w", encoding="utf-8", newline=""
+    ) as handle:
+        writer = csv.writer(handle)
+        writer.writerow(["sample_index", "masked_positions", "generated_sequence"])
+        for sample_index in range(fake_sequence.shape[0]):
+            writer.writerow([sample_index, int(mutable_mask[sample_index].sum().item()),
+                             decode_soft_sequence(fake_sequence[sample_index])])
+
+
+def run_pregan_training(config: PreGANSmokeConfig, predictor: nn.Module) -> dict[str, object]:
+    if config.steps < 1 or config.critic_updates < 1 or config.checkpoint_interval < 1:
+        raise ValueError("steps, critic_updates and checkpoint_interval must be positive")
     torch.manual_seed(config.seed)
     device = torch.device(config.device)
     dataset = MaskedPromoterDataset(config.input_csv, sequence_length=config.sequence_length)
@@ -336,37 +381,25 @@ def run_pregan_smoke_training(config: PreGANSmokeConfig, predictor: nn.Module) -
     history: list[dict[str, float]] = []
     iterator = iter(loader)
     for step in range(1, config.steps + 1):
-        try:
-            batch = next(iterator)
-        except StopIteration:
-            iterator = iter(loader)
-            batch = next(iterator)
-
-        fixed_bases = batch["fixed_bases"].to(device)
-        mutable_mask = batch["mutable_mask"].to(device)
-        target_sequence = batch["target_sequence"].to(device)
-        target_expression = batch["expression"].to(device)
-
-        noise = sample_noise(
-            target_sequence.shape[0],
-            generator.noise_channels,
-            target_sequence.shape[-1],
-            device=device,
-        )
-        fake_logits = generator(noise, fixed_bases, mutable_mask)
-        fake_sequence = apply_masked_template(fake_logits, fixed_bases, mutable_mask)
-
-        discriminator_optimizer.zero_grad()
-        d_loss = discriminator_wgan_gp_loss(
-            discriminator,
-            target_sequence,
-            fake_sequence,
-            fixed_bases,
-            mutable_mask,
-            gradient_penalty_weight=config.gradient_penalty_weight,
-        )
-        d_loss.backward()
-        discriminator_optimizer.step()
+        discriminator_losses: list[float] = []
+        for _ in range(config.critic_updates):
+            batch, iterator = _next_batch(iterator, loader)
+            fixed_bases = batch["fixed_bases"].to(device)
+            mutable_mask = batch["mutable_mask"].to(device)
+            target_sequence = batch["target_sequence"].to(device)
+            target_expression = batch["expression"].to(device)
+            noise = sample_noise(target_sequence.shape[0], generator.noise_channels,
+                                 target_sequence.shape[-1], device=device)
+            fake_logits = generator(noise, fixed_bases, mutable_mask)
+            fake_sequence = apply_masked_template(fake_logits, fixed_bases, mutable_mask)
+            discriminator_optimizer.zero_grad()
+            d_loss = discriminator_wgan_gp_loss(
+                discriminator, target_sequence, fake_sequence, fixed_bases, mutable_mask,
+                gradient_penalty_weight=config.gradient_penalty_weight,
+            )
+            d_loss.backward()
+            discriminator_optimizer.step()
+            discriminator_losses.append(float(d_loss.detach()))
 
         noise = sample_noise(
             target_sequence.shape[0],
@@ -392,7 +425,12 @@ def run_pregan_smoke_training(config: PreGANSmokeConfig, predictor: nn.Module) -
         )
         g_loss.backward()
         generator_optimizer.step()
-        history.append({"step": float(step), "generator_loss": float(g_loss.detach()), "discriminator_loss": float(d_loss.detach())})
+        history.append({"generator_iteration": float(step),
+                        "generator_loss": float(g_loss.detach()),
+                        "mean_critic_loss": sum(discriminator_losses) / len(discriminator_losses)})
+        if config.snapshot_dir and step % config.checkpoint_interval == 0:
+            _save_training_snapshot(Path(config.snapshot_dir), step, generator, discriminator,
+                                    config, mutable_mask, fake_sequence)
 
     checkpoint_path = Path(config.output_checkpoint)
     checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
@@ -401,18 +439,30 @@ def run_pregan_smoke_training(config: PreGANSmokeConfig, predictor: nn.Module) -
             "generator_state_dict": generator.state_dict(),
             "discriminator_state_dict": discriminator.state_dict(),
             "config": asdict(config),
-            "note": "Smoke-test checkpoint for training plumbing only; not a validated generation model.",
+            "note": "Conditional preGAN checkpoint trained with the released 165-bp workflow.",
         },
         checkpoint_path,
     )
     metrics = {
         "num_records": len(dataset),
         "steps": config.steps,
+        "generator_iterations": config.steps,
+        "critic_updates_per_generator": config.critic_updates,
+        "total_critic_updates": config.steps * config.critic_updates,
+        "checkpoint_interval": config.checkpoint_interval,
+        "batch_size": config.batch_size,
+        "learning_rate": config.learning_rate,
+        "gradient_penalty_weight": config.gradient_penalty_weight,
         "checkpoint": str(checkpoint_path),
         "history": history,
-        "release_boundary": "training-smoke only; no validated preGAN inference route is released",
+        "release_boundary": "computationally trained conditional generator; biological validation remains required",
     }
     metrics_path = Path(config.metrics_json)
     metrics_path.parent.mkdir(parents=True, exist_ok=True)
     metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     return metrics
+
+
+def run_pregan_smoke_training(config: PreGANSmokeConfig, predictor: nn.Module) -> dict[str, object]:
+    """Compatibility wrapper for short tests using the production training loop."""
+    return run_pregan_training(config, predictor)

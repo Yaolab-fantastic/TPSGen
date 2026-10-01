@@ -35,23 +35,43 @@
       "notes": "Expression-constraint checkpoint used during preGAN generator training; not the generator itself."
     },
     {
+      "name": "transvae_tomato_historical_compatible_predictor",
+      "type": "transvae_model_adapter",
+      "status": "default_historical_compatible_checkpoint",
+      "weights_path": "models/transvae/historical_compatible_best_val_corr.pth",
+      "sha256": "cdc55cd2ce796386a5be74b8697790cbad70e7bcb6cfff85e189b234c9628f78",
+      "architecture": "Transformer-VAE encoder with 128-dimensional latent representation and four-output MLP predictor",
+      "source_convention": "historical checkpoint-compatible token slicing and attention mask",
+      "notes": "Default release scorer for model-consistent historical inference. This compatibility route is distinct from the corrected full-length development checkpoint."
+    },
+    {
       "name": "transvae_tomato_joint_predictor",
       "type": "transvae_model_adapter",
-      "status": "training_required_not_bundled",
+      "status": "bundled_corrected_full_length_development_checkpoint",
       "weights_path": "models/transvae/full_length_joint_model.pth",
-      "sha256": null,
+      "sha256": "835f9e5cb7c1b184a19c4db9cb8d5652adb5f6e1eaf73a839929e00327f4aa03",
       "architecture": "Transformer-VAE encoder with full 165-bp input, 128-dimensional latent representation and four-output MLP predictor",
       "source_convention": "full-length A/C/G/T input with no nucleotide token aliased to padding",
-      "notes": "The legacy checkpoint was removed because it dropped the final base and aliased A with padding. Train this corrected model before enabling checkpoint-backed scoring."
+      "training_data": "data/raw/transvae/paper_split/train.csv",
+      "training_records": 11257,
+      "training_epochs": 20,
+      "split_manifest": "data/raw/transvae/paper_split/manifest.json",
+      "notes": "Full-length joint checkpoint trained with the released Transformer-VAE objective; validation/test metrics must be reported separately from the historical checkpoint evaluation."
     },
     {
       "name": "tomato_pregan_conditional_generator",
       "type": "pregan_generator",
-      "status": "trained_local_checkpoint",
-      "weights_path": "models/pregan/generator_checkpoint.pt",
-      "sha256": "2f3735463cd614a9564069c204f79c84ace42c549c0cf3bba79bdabffba2da05",
-      "training_records": 5100,
-      "training_steps": 1000,
+      "status": "bundled_original_pregan_checkpoint",
+      "weights_path": "models/pregan/original_pregan_10000.pt",
+      "metrics_path": "models/pregan/original_pregan_10000.json",
+      "sha256": "f8d209ddc56aafc042ed7d2381e0e680ccc9242758cf06af9f3d14e10770a803",
+      "architecture": "thesis_original_pregan",
+      "training_records": 4080,
+      "training_steps": 10000,
+      "critic_updates_per_generator": 5,
+      "total_critic_updates": 50000,
+      "checkpoint_interval": 100,
+      "training_split": "original loader 80/20 partition of merged_result.csv; 4,080 records used for checkpoint fitting",
       "training_data": "retained tomato paired promoter table",
       "qc_summary": {
         "fixed_position_preservation_rate": 1.0,
@@ -59,7 +79,7 @@
         "maximum_homopolymer_observed": 9,
         "qc_evaluation_candidates": 20
       },
-      "notes": "Computational generator checkpoint trained on the retained tomato paired table; external biological validation remains required."
+      "notes": "Original thesis preGAN architecture migrated from deepseed and trained on the 80% split of merged_result.csv: 10,000 generator iterations, five critic updates per generator update, L1 weight 50 and frozen DenseNet-LSTM fruit predictor. Biological validation remains required."
     }
   ]
 }

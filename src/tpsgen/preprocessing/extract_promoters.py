@@ -10,7 +10,7 @@ from tpsgen.io.fasta import write_fasta
 from tpsgen.io.schema import SequenceRecord
 
 
-@dataclass(slots=True)
+@dataclass
 class PromoterWindow:
     chromosome: str
     gene_id: str

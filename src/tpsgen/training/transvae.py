@@ -38,6 +38,7 @@ def differentiable_trimer_loss(reconstructed: torch.Tensor, target: torch.Tensor
 @dataclass
 class TrainingConfig:
     input_csv: str = "data/raw/transvae/training_set.csv"
+    validation_csv: str | None = None
     sequence_column: str = "realB"
     tissue_columns: tuple[str, str, str, str] = (
         "expr_tissue_1",
@@ -60,9 +61,12 @@ class TrainingConfig:
     max_rows: int | None = None
     device: str = "cpu"
     training_mode: str = "paper_joint"
-    input_policy: str = "full_length"
     trimer_weight: float = 0.1
     warmup_epochs: int = 10
+    target_tissue: str = "fruit"
+    specificity_mode: str = "none"
+    specificity_weight: float = 0.0
+    specificity_margin: float = 0.0
 
 
 class TransVAEDataset(Dataset[tuple[torch.Tensor, torch.Tensor]]):
@@ -143,13 +147,17 @@ def _parse_scalar(value: str) -> object:
 def train_transvae(config: TrainingConfig) -> dict[str, object]:
     if config.training_mode not in {"prediction_only_scaffold", "paper_joint"}:
         raise ValueError(
-            "Only training_mode=prediction_only_scaffold is implemented in the "
-            "released package; the paper's joint VAE objective requires the "
-            "original training sources and checkpoint-matched preprocessing."
+            "Only training_mode=prediction_only_scaffold or training_mode=paper_joint is supported."
         )
     random.seed(config.seed)
     torch.manual_seed(config.seed)
     device = torch.device(config.device)
+    if config.target_tissue not in {"root", "stem", "leaf", "fruit"}:
+        raise ValueError("target_tissue must be root, stem, leaf, or fruit")
+    if config.specificity_mode not in {"none", "label_gated", "balanced_label_margin"}:
+        raise ValueError("specificity_mode must be none, label_gated, or balanced_label_margin")
+    if config.specificity_weight < 0 or config.specificity_margin < 0:
+        raise ValueError("specificity_weight and specificity_margin must be non-negative")
 
     dataset = TransVAEDataset(
         input_csv=config.input_csv,
@@ -158,12 +166,23 @@ def train_transvae(config: TrainingConfig) -> dict[str, object]:
         sequence_length=config.sequence_length,
         max_rows=config.max_rows,
     )
-    val_size = max(1, int(len(dataset) * config.validation_fraction)) if len(dataset) > 1 else 0
-    train_size = len(dataset) - val_size
     generator = torch.Generator().manual_seed(config.seed)
-    if val_size:
-        train_dataset, val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
+    if config.validation_csv:
+        train_dataset = dataset
+        val_dataset = TransVAEDataset(
+            input_csv=config.validation_csv,
+            sequence_column=config.sequence_column,
+            tissue_columns=config.tissue_columns,
+            sequence_length=config.sequence_length,
+            max_rows=config.max_rows,
+        )
+        train_size, val_size = len(train_dataset), len(val_dataset)
     else:
+        val_size = max(1, int(len(dataset) * config.validation_fraction)) if len(dataset) > 1 else 0
+        train_size = len(dataset) - val_size
+    if not config.validation_csv and val_size:
+        train_dataset, val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
+    elif not config.validation_csv:
         train_dataset, val_dataset = dataset, None
 
     train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True, generator=generator)
@@ -173,7 +192,7 @@ def train_transvae(config: TrainingConfig) -> dict[str, object]:
         else None
     )
 
-    model = TransVAEMLP(input_policy=config.input_policy).to(device)
+    model = TransVAEMLP().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
 
     history: list[dict[str, float]] = []
@@ -197,9 +216,13 @@ def train_transvae(config: TrainingConfig) -> dict[str, object]:
     metrics = {
         "config": asdict(config),
         "training_mode": config.training_mode,
-        "input_policy": config.input_policy,
-        "encoder_input_length": 165 if config.input_policy == "full_length" else 164,
-        "objective": "historical joint objective" if config.training_mode == "paper_joint" else "four-tissue prediction MSE only",
+        "encoder_input_length": 165,
+        "objective": (
+            "joint reconstruction/KL/prediction/3-mer objective with label-gated tissue-specificity loss"
+            if config.specificity_mode == "label_gated" and config.specificity_weight > 0
+            else "historical joint objective" if config.training_mode == "paper_joint"
+            else "four-tissue prediction MSE only"
+        ),
         "reconstruction_loss_implemented": config.training_mode == "paper_joint",
         "kl_loss_implemented": config.training_mode == "paper_joint",
         "three_mer_loss_implemented": config.training_mode == "paper_joint",
@@ -236,11 +259,13 @@ def _run_epoch(
     epoch: int = 1,
 ) -> dict[str, float]:
     if loader is None:
-        return {"loss": 0.0, "reconstruction_loss": 0.0, "prediction_loss": 0.0, "kl_loss": 0.0}
+        return {"loss": 0.0, "reconstruction_loss": 0.0, "prediction_loss": 0.0, "kl_loss": 0.0, "specificity_loss": 0.0, "target_label_records": 0.0, "target_margin_pass_rate": 0.0}
     training = optimizer is not None
     model.train(training)
-    totals = {"loss": 0.0, "reconstruction_loss": 0.0, "prediction_loss": 0.0, "kl_loss": 0.0}
+    totals = {"loss": 0.0, "reconstruction_loss": 0.0, "prediction_loss": 0.0, "kl_loss": 0.0, "specificity_loss": 0.0}
     total_items = 0
+    target_items = 0
+    target_margin_passes = 0
     for sequences, targets in loader:
         sequences = sequences.to(device)
         targets = targets.to(device)
@@ -277,6 +302,32 @@ def _run_epoch(
             trimer = torch.zeros((), device=device)
             prediction_loss = F.mse_loss(predicted, targets)
             loss = config.prediction_weight * prediction_loss
+        target_index = ("root", "stem", "leaf", "fruit").index(config.target_tissue)
+        other_indices = [index for index in range(4) if index != target_index]
+        label_gate = targets[:, target_index] > targets[:, other_indices].max(dim=1).values
+        predicted_margin = predicted[:, target_index] - predicted[:, other_indices].max(dim=1).values
+        if config.specificity_mode == "balanced_label_margin" and config.specificity_weight > 0:
+            label_tissue = targets.argmax(dim=1)
+            sample_losses = []
+            for tissue_index in range(4):
+                class_mask = label_tissue == tissue_index
+                if not class_mask.any():
+                    continue
+                class_other = [index for index in range(4) if index != tissue_index]
+                class_margin = (
+                    predicted[class_mask, tissue_index]
+                    - predicted[class_mask][:, class_other].max(dim=1).values
+                )
+                # Average within each observed label class before averaging
+                # classes, so abundant tissues cannot dominate this term.
+                sample_losses.append(F.relu(config.specificity_margin - class_margin).mean())
+            specificity_loss = torch.stack(sample_losses).mean() if sample_losses else torch.zeros((), device=device)
+            loss = loss + config.specificity_weight * specificity_loss
+        elif config.specificity_mode == "label_gated" and config.specificity_weight > 0 and label_gate.any():
+            specificity_loss = F.relu(config.specificity_margin - predicted_margin[label_gate]).mean()
+            loss = loss + config.specificity_weight * specificity_loss
+        else:
+            specificity_loss = torch.zeros((), device=device)
         if optimizer is not None:
             loss.backward()
             optimizer.step()
@@ -286,6 +337,12 @@ def _run_epoch(
         totals["reconstruction_loss"] += float(reconstruction.detach().cpu())
         totals["prediction_loss"] += float(prediction_loss.detach().cpu()) * batch_size
         totals["kl_loss"] += float(kl.detach().cpu())
+        totals["specificity_loss"] += float(specificity_loss.detach().cpu()) * batch_size
+        target_items += int(label_gate.sum().item())
+        target_margin_passes += int((predicted_margin[label_gate] >= config.specificity_margin).sum().item())
         totals.setdefault("trimer_loss", 0.0)
         totals["trimer_loss"] += float(trimer.detach().cpu())
-    return {key: value / max(total_items, 1) for key, value in totals.items()}
+    result = {key: value / max(total_items, 1) for key, value in totals.items()}
+    result["target_label_records"] = float(target_items)
+    result["target_margin_pass_rate"] = target_margin_passes / max(target_items, 1)
+    return result

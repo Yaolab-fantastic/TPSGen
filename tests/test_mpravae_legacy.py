@@ -63,7 +63,7 @@ class TestTransVAEAdapter(unittest.TestCase):
         second = adapter.predict([record])[0]
         self.assertEqual(first.to_dict(), second.to_dict())
 
-    def test_transvae_design_api_is_not_released(self) -> None:
+    def test_transvae_design_api_returns_rescored_candidates(self) -> None:
         if not Path(DEFAULT_TRANSVAE_CHECKPOINT).exists():
             self.skipTest("Bundled TransVAE checkpoint not available.")
 
@@ -72,8 +72,12 @@ class TestTransVAEAdapter(unittest.TestCase):
             "seq1",
             "AAATTGTAACAAATAATACAAAATATTTGTGAATACTAATGATTTCCAAATGGGATACCTTTTTGTTGTAAATAAGTGGAAAGGCAAAGTAGATAAATTCGCCTTTCCTAAGTATCCTTTTGGTCACAATTTCCAAGAGAAAAGAACAGAAAAGAAAAGAGAGAA",
         )
-        with self.assertRaisesRegex(NotImplementedError, "not released as a validated design API"):
-            adapter.design([record], target_tissue="fruit", candidates=2, seed=42)
+        designs = adapter.design(
+            [record], target_tissue="fruit", candidates=2, seed=42, steps=1
+        )
+        self.assertEqual(len(designs), 2)
+        self.assertTrue(all(len(item.designed_sequence) == 165 for item in designs))
+        self.assertTrue(all(item.design_status.endswith("rescored") for item in designs))
 
 
 if __name__ == "__main__":

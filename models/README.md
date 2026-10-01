@@ -1,57 +1,37 @@
-# Models
+# TPSGen Bundled Models
 
-This directory contains model resources used by the released DNABERT and
-preGAN routes. A corrected full-length TransVAE checkpoint is not bundled yet.
+This directory contains the model resources used by the final TPSGen release. Checksums and machine-readable provenance are stored in `weights_manifest.json`.
 
-## Bundled Resources
+## TransVAE
 
-| Path | Used by | Notes |
-| --- | --- | --- |
-| `models/transvae/full_length_joint_model.pth` | `predict-transvae` | Expected output of the corrected full-length joint training route; not bundled until retraining is completed. |
-| `models/dnabert/` | `predict-dnabert` | Tomato fine-tuned 6-mer DNABERT checkpoint and tokenizer resources for fresh FASTA inference. |
-| `models/pregan/generator_checkpoint.pt` | `pregan-generate` and `run --design-backend pregan` | Local conditional-generator checkpoint trained on the retained tomato paired table; historical quantitative reproducibility has not been independently established and candidates require external validation. |
-| `models/pregan_expression/165_mpra_expr_denselstm.pth` | preGAN training smoke test | DenseLSTM scalar-expression checkpoint used as the frozen expression-constraint scorer in the preGAN training-plumbing test. |
-| `models/pregan_expression/SeqRegressionModel.py` | preGAN training smoke test | Required class-definition file for loading the bundled expression-constraint checkpoint. |
+Default scoring checkpoint: `models/transvae/historical_compatible_best_val_corr.pth`
 
-Checksums and status are recorded in `models/weights_manifest.json`.
+- architecture: Transformer variational autoencoder with four-output MLP head
+- mode: historical checkpoint compatibility for the reported model-development scoring behavior
+- validation PCC recovered with the historical input contract: 0.863 / 0.912 / 0.884 / 0.876
+- SHA-256: `cdc55cd2ce796386a5be74b8697790cbad70e7bcb6cfff85e189b234c9628f78`
 
-## Training Compatibility
+Development checkpoint: `models/transvae/full_length_joint_model.pth`
 
-The repository includes a TransVAE-MLP training entry point for reproducibility:
+- input: corrected full 165 bp A/C/G/T sequence
+- training mode: `paper_joint`
+- objective: reconstruction + weighted KL + weighted prediction + weighted differentiable 3-mer loss
+- training records: 11,257; epochs: 20
+- parameters: 2,498,834
+- SHA-256: `835f9e5cb7c1b184a19c4db9cb8d5652adb5f6e1eaf73a839929e00327f4aa03`
 
-```bash
-PYTHONPATH=src python scripts/train_transvae.py \
-  --config configs/training_transvae.yaml
-```
+Training metadata: `models/transvae/full_length_joint_metrics.json`
 
-This command generates a strict `TransVAEMLP` state dictionary compatible
-with `predict-transvae`. The released checkpoint is loaded without key
-remapping or architecture substitution.
+Fixed split metadata: `data/raw/transvae/paper_split/manifest.json`
 
-## Public Boundary
+## Connected Models
 
-Package-native commands do not require these files:
+DNABERT supplies retained-position evidence to the preGAN workflow. preGAN generates candidates from the resulting masked template, and the bundled TransVAE checkpoint performs final four-tissue scoring.
+
+## Validation
 
 ```bash
-tpsgen predict
-tpsgen design
+tpsgen validate-models
 ```
 
-The corrected TransVAE checkpoint, once trained, will be used only by the explicit model command:
-
-```bash
-tpsgen predict-transvae
-```
-
-The preGAN expression-constraint checkpoint is not exposed as a standalone
-public prediction mechanism. It supports the preGAN training path and smoke test.
-The bundled generator checkpoint can be run through the explicit
-`pregan-generate` or integrated `run --design-backend pregan` route, but it is
-not presented as an independently benchmarked or experimentally validated
-generator.
-
-If the model directory is moved outside the repository, set:
-
-```bash
-export TPSGEN_MODELS_DIR=/path/to/models
-```
+Required checkpoints must be reported as available before a final integrated run.

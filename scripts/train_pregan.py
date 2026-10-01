@@ -6,7 +6,7 @@ import argparse
 import json
 
 from tpsgen.legacy.pregan_expression import PreganExpressionConstraintScorer
-from tpsgen.training.pregan import PreGANSmokeConfig, run_pregan_smoke_training
+from tpsgen.training.pregan import PreGANSmokeConfig, run_pregan_training
 
 
 def main() -> None:
@@ -17,6 +17,9 @@ def main() -> None:
     parser.add_argument("--metrics-json", required=True)
     parser.add_argument("--steps", type=int, default=10000)
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--critic-updates", type=int, default=5)
+    parser.add_argument("--checkpoint-interval", type=int, default=100)
+    parser.add_argument("--snapshot-dir", default="models/pregan/snapshots")
     parser.add_argument("--device", default=defaults.device)
     parser.add_argument("--expression-checkpoint")
     parser.add_argument("--expression-module-dir")
@@ -29,6 +32,9 @@ def main() -> None:
         metrics_json=args.metrics_json,
         steps=args.steps,
         batch_size=args.batch_size,
+        critic_updates=args.critic_updates,
+        checkpoint_interval=args.checkpoint_interval,
+        snapshot_dir=args.snapshot_dir,
         device=args.device,
     )
     predictor = PreganExpressionConstraintScorer(
@@ -36,11 +42,10 @@ def main() -> None:
         module_dir=args.expression_module_dir,
         device=args.device,
     ).model
-    metrics = run_pregan_smoke_training(config, predictor)
-    metrics["release_boundary"] = "trained conditional generator; validate externally before biological use"
+    metrics = run_pregan_training(config, predictor)
     with open(args.metrics_json, "w", encoding="utf-8") as handle:
         json.dump(metrics, handle, indent=2)
-    print(json.dumps({key: metrics[key] for key in ("num_records", "steps", "checkpoint")}, indent=2))
+    print(json.dumps({key: metrics[key] for key in ("num_records", "generator_iterations", "total_critic_updates", "checkpoint")}, indent=2))
 
 
 if __name__ == "__main__":

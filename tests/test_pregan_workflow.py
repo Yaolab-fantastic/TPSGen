@@ -10,9 +10,9 @@ from tpsgen.pipeline.pregan_workflow import run_pregan_workflow
 class TestPreGANWorkflow(unittest.TestCase):
     def test_workflow_can_add_dnabert_evidence(self) -> None:
         root = Path(__file__).resolve().parents[1]
-        checkpoint = root / "models" / "pregan" / "generator_checkpoint.pt"
+        checkpoint = root / "models" / "pregan" / "original_pregan_10000.pt"
         dnabert = root / "models" / "dnabert" / "pytorch_model.bin"
-        transvae = root / "models" / "transvae" / "full_length_joint_model.pth"
+        transvae = root / "models" / "transvae" / "historical_compatible_best_val_corr.pth"
         if not checkpoint.exists() or not dnabert.exists() or not transvae.exists():
             self.skipTest("required model checkpoints are not present")
         template = "M" * 12 + "A" * 153
@@ -28,8 +28,8 @@ class TestPreGANWorkflow(unittest.TestCase):
             self.assertTrue(manifest["information_flow"]["masked_template_to_pregan"])
     def test_workflow_writes_candidates_and_scores(self) -> None:
         root = Path(__file__).resolve().parents[1]
-        checkpoint = root / "models" / "pregan" / "generator_checkpoint.pt"
-        transvae = root / "models" / "transvae" / "full_length_joint_model.pth"
+        checkpoint = root / "models" / "pregan" / "original_pregan_10000.pt"
+        transvae = root / "models" / "transvae" / "historical_compatible_best_val_corr.pth"
         if not checkpoint.exists() or not transvae.exists():
             self.skipTest("trained preGAN checkpoint is not present")
         template = "M" * 12 + "A" * 153
@@ -49,6 +49,10 @@ class TestPreGANWorkflow(unittest.TestCase):
             eligible = [int(row["final_rank"]) for row in rows if row["final_rank"]]
             self.assertEqual(eligible, sorted(eligible))
             self.assertTrue(all(row["eligible_for_ranking"] == "True" for row in rows if row["final_rank"]))
+            self.assertTrue(all(
+                row["preferred_tissue"] == "fruit"
+                for row in rows if row["eligible_for_ranking"] == "True"
+            ))
 
 
 if __name__ == "__main__":

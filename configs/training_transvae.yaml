@@ -19,6 +19,5 @@ max_rows: null
 device: cpu
 # Use the recovered Transformer-VAE joint objective described in the paper.
 training_mode: paper_joint
-input_policy: full_length
 trimer_weight: 0.1
 warmup_epochs: 10

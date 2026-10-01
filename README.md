@@ -1,100 +1,137 @@
 # TPSGen
 
-TPSGen (Tomato Promoter Specificity-guided Generator) is a Python command-line framework for motif-conditioned candidate generation, four-tissue scoring and tissue-bias prioritization of tomato promoters.
+TPSGen (Tomato Promoter Specificity-guided Generator) is a Python command-line toolkit for evidence-guided generation and four-tissue computational prioritization of tomato promoter candidates.
 
-It provides a unified workflow for:
+The model-backed workflow connects three project modules in one traceable route:
 
-- validating promoter FASTA inputs
-- annotating a configured promoter motif set
-- reporting root, stem, leaf and fruit-associated heuristic scores
-- generating motif-aware candidate promoter sequences
-- exporting reports and figure-ready result summaries
-- running bundled model-backed routes explicitly when needed
-- reproducing retained manuscript-facing result resources
+```text
+165-bp tomato promoter FASTA
+  -> DNABERT position-associated evidence
+  -> retained-position masked template
+  -> preGAN candidate generation
+  -> TransVAE-MLP root/stem/leaf/fruit scoring
+  -> tissue-bias filtering and candidate ranking
+```
 
-TPSGen integrates package-native deterministic modules, bundled model-backed routes, preprocessing logic, design utilities and retained project result tables in one inspectable software framework for the accompanying Application Note.
-
-Some internal module names and command aliases retain `legacy` for backward compatibility with earlier project scripts. In this release, these paths refer to supported model-backed adapters and retained result-reconstruction routes, not deprecated workflows.
+TPSGen writes intermediate evidence, templates, generated sequences, four-tissue scores and run metadata so that every ranked candidate can be traced to its input promoter. Scores are computational prioritization outputs; experimental validation is required before making biological claims.
 
 ## Framework Overview
 
-The figure below summarizes the TPSGen workflow. Tomato promoter FASTA
-sequences are processed through motif evidence extraction, motif-conditioned
-candidate generation and four-tissue score-based prioritization. The displayed
-scores and designed sequences are computational outputs and do not by
-themselves establish experimentally validated tissue-specific expression.
-
 ![TPSGen framework overview](docs/fig/framework.png)
 
-*TPSGen framework overview. DNABERT-derived evidence, preGAN fruit-guided
-generation and TransVAE-MLP four-tissue scoring are exposed as model-backed
-routes, while the default package-native route remains runnable without model
-checkpoints.*
+*DNABERT-derived evidence identifies positions to retain, preGAN completes editable positions under fruit-associated guidance, and TransVAE-MLP compares candidates across root, stem, leaf and fruit targets.*
+
+## Main Features
+
+- validates single- or multi-record promoter FASTA input;
+- runs fresh inference with the bundled tomato DNABERT 6-mer model;
+- converts DNABERT evidence into retained-position preGAN templates;
+- generates candidates with the bundled 10,000-iteration preGAN checkpoint;
+- scores candidates with the bundled four-output TransVAE-MLP model;
+- reports preferred tissue, target score, target-bias margin and tissue-bias index (`tau`);
+- distinguishes strict-threshold results from adaptive target-biased results;
+- checks sequence quality and retained-position fidelity;
+- provides deterministic package-native commands for lightweight demonstrations;
+- includes training entry points, model metadata, checksums, examples and tests.
+
+## Requirements
+
+- Python 3.9 or newer
+- Linux recommended for model-backed execution
+- PyTorch 2.0 or newer for TransVAE and preGAN
+- Hugging Face Transformers 4.x for DNABERT
+- CUDA-capable GPU recommended for training; inference can run on CPU
 
 ## Installation
 
-Install a downloaded release wheel for package-native commands:
+### From the repository
+
+```bash
+git clone <TPSGen repository URL>
+cd TPSGen
+
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e ".[dnabert]"
+```
+
+For training and development utilities:
+
+```bash
+python -m pip install -e ".[dnabert,training,dev,reproduce]"
+```
+
+### From a release wheel
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install tpsgen-0.2.0-py3-none-any.whl
+python -m pip install --upgrade pip
+python -m pip install "tpsgen-0.2.0-py3-none-any.whl[dnabert]"
 ```
 
-The release wheel contains the paper-aligned Transformer-VAE checkpoint, the
-DNABERT checkpoint, the preGAN generator and expression-constraint resources,
-the default training configuration and the example input. Because the DNABERT
-checkpoint is large, publication releases may distribute model resources
-separately from the base wheel; follow the resource location or download
-instructions for the specific release.
-Package-native commands do not require PyTorch. Install the optional model
-dependencies before running checkpoint-backed routes. From a published package
-index, use:
+The complete wheel includes the bundled DNABERT, preGAN and TransVAE resources and is therefore large. A repository installation can instead use `TPSGEN_MODELS_DIR` to point to a separately distributed `models/` directory.
+
+## Verify The Installation
 
 ```bash
-pip install "tpsgen[models]"
+tpsgen --help
+tpsgen validate-models
+tpsgen validate-input --input examples/demo_input.fasta
 ```
 
-For the DNABERT inference route, install the additional Transformers
-dependency:
+For a complete model-backed installation, `validate-models` should report the DNABERT checkpoint, preGAN generator and TransVAE checkpoint as available.
+
+## Quick Start: Complete Model-Backed Workflow
+
+This command follows the integrated manuscript logic. Input records must be unique, unambiguous 165-bp A/C/G/T promoter sequences.
 
 ```bash
-pip install "tpsgen[dnabert]"
+tpsgen run \
+  --input examples/demo_input.fasta \
+  --target fruit \
+  --motif-backend dnabert \
+  --design-backend pregan \
+  --checkpoint models/pregan/original_pregan_10000.pt \
+  --candidates 8 \
+  --seed 42 \
+  --output outputs/fruit_design
 ```
 
-From a local wheel file, use:
+This route:
+
+1. runs DNABERT and derives position-associated evidence;
+2. retains high-evidence positions and marks other positions editable;
+3. passes the resulting masked template to preGAN;
+4. scores every candidate with TransVAE-MLP;
+5. filters by QC, retained positions, preferred tissue, target margin and `tau`;
+6. ranks eligible candidates separately for each input promoter.
+
+The workflow automatically uses the default TransVAE checkpoint. In this command, `--checkpoint` identifies the preGAN generator.
+
+## Quick Start: Existing Masked Templates
+
+If you already have 165-character templates in which retained bases are A/C/G/T and editable positions are `M`:
 
 ```bash
-pip install "tpsgen-0.2.0-py3-none-any.whl[models]"
+tpsgen run-pregan \
+  --input templates.fasta \
+  --checkpoint models/pregan/original_pregan_10000.pt \
+  --target fruit \
+  --candidates 8 \
+  --min-margin 0.0 \
+  --min-tau 0.7 \
+  --adaptive-tau-floor 0.05 \
+  --seed 42 \
+  --output outputs/masked_template_run
 ```
 
-For an editable installation from the repository root:
+`run-pregan` treats supplied A/C/G/T positions as retained positions. It does not run DNABERT; use the integrated command above for automatic DNABERT-to-template transfer. Add `--strict-tau` to disable adaptive fallback.
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
+## Lightweight Package-Native Demo
 
-For development:
-
-```bash
-pip install -e ".[dev]"
-make test
-```
-
-For manuscript-facing result reproduction:
-
-```bash
-pip install -e ".[reproduce]"
-make reproduce-results
-```
-
-## Quick Start
-
-The recommended interface is one integrated command. It accepts a multi-sequence
-FASTA file and writes motif evidence, designed candidates, original/candidate
-scores and a workflow report under one output directory:
+The deterministic route checks installation, file formats and report generation without loading neural checkpoints:
 
 ```bash
 tpsgen run \
@@ -105,430 +142,276 @@ tpsgen run \
   --output outputs/demo
 ```
 
-This default command uses the checkpoint-free package-native route. It is the
-recommended reproducibility path for ordinary users. To use a bundled model,
-select it explicitly, for example `--scoring-backend transvae` for four-tissue
-checkpoint scoring or `--motif-backend dnabert` for fresh DNABERT evidence.
-These options require the model dependencies and have route-specific output
-definitions recorded in `manifest.json`.
-
-For a masked template and a compatible preGAN generator checkpoint, use the same
-`run` entry point with an explicit design backend. This is an explicit model-backed
-route and is not the default package-native workflow:
-
-```bash
-tpsgen run \
-  --input templates.fasta \
-  --design-backend pregan \
-  --checkpoint models/pregan/generator_checkpoint.pt \
-  --target fruit --candidates 5 --seed 42 --output outputs/pregan_workflow
-```
-
-The resulting directory contains `motif/motif_annotations.csv`,
-`design/designed_candidates.fasta`, `design/candidate_metadata.csv`,
-`scoring/original_scores.csv`, `scoring/candidate_scores.csv`,
-`scoring/all_sequence_scores.csv`, three SVG result figures,
-`reports/workflow_report.json`, `reports/workflow_summary.csv`, the validated
-input FASTA and a top-level `manifest.json`.
-
-The integrated scoring CSV files also contain `score_type` and
-`scoring_backend`. In the default `run` route, these fields identify the four
-values as package-native tissue-associated heuristic scores. They support
-candidate ranking; they are not calibrated expression measurements and are not
-TransVAE checkpoint outputs.
-
-The top-level `manifest.json` records the tomato-specific backend used for each
-stage, its stage input and output, checkpoint status and score definition.
-It also records the status of the optional DNABERT, preGAN and TransVAE model
-routes. The bundled DNABERT checkpoint supports explicit FASTA inference with
-`predict-dnabert`; the separate retained attention resource is only for
-historical post-processing and is not used by the default workflow. The bundled
-preGAN generator can be run explicitly, but its historical quantitative
-reproducibility and biological activity have not been independently validated.
-TransVAE is available through the explicit scoring backend described below.
-
-The lower-level `annotate`, `predict` and `design` commands remain available
-for users who need to run or inspect one stage separately. The default
-integrated command is the supported user-facing workflow; model-specific
-commands and manuscript reproduction scripts are maintained as explicit
-advanced routes below.
-
-To score both input and generated candidates with the bundled tomato TransVAE
-model, select the explicit model backend:
-
-```bash
-tpsgen run \
-  --input tomato_promoters.fasta \
-  --target fruit \
-  --candidates 5 \
-  --scoring-backend transvae \
-  --output outputs/tomato_transvae
-```
-
-The integrated `run` command requires exactly 165-bp unambiguous tomato promoter
-records, regardless of scoring backend. The lower-level `annotate`, `predict`
-and `design` commands can still be used for exploratory inputs of other lengths.
-
-When genomic coordinates are available, promoter FASTA can be prepared
-directly from a tomato reference genome and GFF3 annotation:
-
-```bash
-tpsgen extract-promoters \
-  --genome tomato.fa \
-  --annotation tomato.gff3 \
-  --output tomato_promoters.fasta
-```
-
-The extractor uses `gene` records, retains complete 165-bp windows, and writes
-negative-strand windows in promoter-to-gene orientation by reverse
-complementing them. Incomplete or ambiguous windows are skipped and counted
-in the command summary.
-
-Run the bundled example workflow:
-
-```bash
-mkdir -p outputs
-
-tpsgen copy-example \
-  --output outputs/demo_input.fasta
-
-tpsgen validate-input \
-  --input outputs/demo_input.fasta
-
-tpsgen annotate \
-  --input outputs/demo_input.fasta \
-  --output outputs/demo_annotate.csv
-
-tpsgen predict \
-  --input outputs/demo_input.fasta \
-  --output outputs/demo_predict.csv
-
-tpsgen design \
-  --input outputs/demo_input.fasta \
-  --target fruit \
-  --candidates 3 \
-  --seed 42 \
-  --output outputs/demo_design.csv
-
-tpsgen report \
-  --input outputs/demo_design.csv \
-  --output outputs/demo_report.json
-```
-
-Or run the same demo with:
+Alternatively:
 
 ```bash
 make demo
 ```
 
-## Inputs
+Package-native scores are heuristic scores. They are not TransVAE outputs and should not be compared numerically with TransVAE model scores.
 
-The main input is a FASTA file containing one or more promoter sequences. Multi-sequence FASTA files are supported.
-
-Single-sequence example:
+## Input Format
 
 ```fasta
 >promoter_1
-ATGCAAAATTTATCG...
-```
-
-Multi-sequence example:
-
-```fasta
->promoter_1
-ATGCAAAATTTATCG...
+ACGTT...165_BASES_TOTAL...TTGCA
 >promoter_2
-TTTATCAAAAGGCTA...
->promoter_3
-CTATTGGGCAAAATA...
+TTAAA...165_BASES_TOTAL...CGTAT
 ```
 
-Validation rules:
+Integrated-route requirements:
 
-- sequence identifiers must be unique
-- empty records are rejected
-- sequences are normalized to uppercase
-- supported symbols are `A`, `C`, `G`, `T`, `N` and `M`
+- unique sequence identifiers;
+- exactly 165 nucleotides per record;
+- only unambiguous `A`, `C`, `G` and `T`;
+- incomplete promoter windows excluded rather than padded with `N`;
+- masked-template commands additionally accept `M` at editable positions.
 
-The integrated `run` workflow requires canonical 165-bp unambiguous `A/C/G/T`
-sequences because this matches the tomato model input convention. The
-lower-level package-native commands can process exploratory sequences of other
-lengths.
-
-### Preparing 165-bp TransVAE Inputs
-
-For `predict-transvae`, each FASTA record should match the 165-bp promoter-window convention used for the retained TransVAE training resource. In the original ITAG3.2 preprocessing workflow, tomato genome FASTA and GFF3 annotation resources were parsed, entries annotated as `gene` on the positive strand were retained, and `gene start` was used as an approximate TSS proxy because high-resolution experimental TSS annotations were not available for that resource.
-
-The retained project convention is:
-
-| Training-resource case | 165-bp genomic window | FASTA sequence orientation |
-| --- | --- | --- |
-| ITAG3.2 positive-strand `gene` entry | 165 bp directly upstream of `gene start`: `[gene_start - 165, gene_start)` | Keep the reference-genome orientation |
-
-For example, if a positive-strand gene starts at position 16,480, the retained convention extracts `[16480 - 165, 16480)`. The final FASTA sequence should contain exactly 165 bases and only `A/C/G/T`.
-
-If users extend the workflow to negative-strand genes, they should extract the corresponding downstream genomic window relative to reference coordinates and reverse-complement it before writing FASTA, so that all sequences are represented in promoter-to-gene orientation. This negative-strand extension is a user-side strand-aware preparation rule; the retained TransVAE training table was built from the positive-strand ITAG3.2 preprocessing convention above. If a gene is too close to a chromosome boundary to provide a full 165-bp window, exclude that record from TransVAE routes rather than padding with `N`. Package-native `annotate`, `predict` and `design` can still be used for non-165-bp exploratory inputs.
-
-## Choosing A Target Tissue
-
-The `design` command uses `--target` to define the desired tissue-associated design objective:
+### Extract promoters from a genome
 
 ```bash
---target root
---target stem
---target leaf
---target fruit
+tpsgen extract-promoters \
+  --genome tomato_genome.fa \
+  --annotation tomato_annotation.gff3 \
+  --output tomato_promoters.fasta
 ```
 
-For example, fruit-targeted design:
+The extractor uses annotated gene starts as coordinate proxies, retains complete 165-bp windows and reverse-complements negative-strand windows into promoter-to-gene orientation. It reports skipped incomplete, ambiguous or duplicate records.
 
-```bash
-tpsgen design \
-  --input my_promoters.fasta \
-  --target fruit \
-  --candidates 5 \
-  --seed 42 \
-  --output outputs/fruit_design.csv
-```
+## Output Directory
 
-If the input FASTA contains 100 promoters and `--candidates 5` is used, the design table can contain up to 500 candidate rows. Candidates are ranked separately for each input promoter.
+The model-backed workflow writes:
 
-## Outputs And How To Use Them
+| File | Contents |
+| --- | --- |
+| `pregan_masked_templates.csv` | Source sequence, generated template and retained positions |
+| `dnabert_attention_evidence.csv` | DNABERT prediction and evidence when DNABERT is selected |
+| `pregan_candidates.csv` | Generated sequences, QC, retention, scores and ranks |
+| `pregan_candidates.fasta` | Generated candidate sequences |
+| `transvae_candidate_scores.csv` | Four TransVAE scores for every candidate |
+| `manifest.json` | Backends, thresholds, information flow, seed and output paths |
 
-`annotate` writes a motif table:
+Important candidate fields:
 
 | Field | Meaning |
 | --- | --- |
-| `sequence_id` | Input promoter identifier |
-| `motif` | Detected motif sequence |
-| `start`, `end` | Zero-based motif coordinates |
-| `score` | Match score, equal to motif length for exact matching |
+| `score_root`, `score_stem`, `score_leaf`, `score_fruit` | Four checkpoint-specific tissue-associated scores |
+| `preferred_tissue` | Tissue with the largest transformed score |
+| `target_score` | Score for the requested tissue |
+| `target_margin` | Target score minus the strongest non-target score |
+| `tau` | Concentration of the four-score profile |
+| `passes_qc` | Sequence-quality result |
+| `passes_retained_positions` | Whether conditioned positions were preserved |
+| `eligible_for_ranking` | Whether active ranking requirements were met |
+| `final_rank` | Rank within the corresponding input promoter |
+| `threshold_mode` | `paper_strict` or `adaptive_target_biased` |
+| `specificity_level` | `strong`, `target_biased` or `not_eligible` |
 
-`predict` writes a four-tissue scoring table:
+`tau` does not identify the favored tissue by itself. Interpret it together with `preferred_tissue` and `target_margin`.
 
-| Field | Meaning |
-| --- | --- |
-| `sequence_id` | Input promoter identifier |
-| `sequence` | Normalized promoter sequence |
-| `score_root`, `score_stem`, `score_leaf`, `score_fruit` | Tissue-associated heuristic scores |
-| `preferred_tissue` | Tissue with the highest score |
+## Run Individual Modules
 
-The TransVAE scoring command has a route-specific output scale:
-
-| Command | Output definition |
-| --- | --- |
-| `predict-transvae` | Four tissue model scores using the same `score_root`--`score_fruit` field names; values are not calibrated to the package-native heuristic scale |
-
-`design` writes a candidate table:
-
-| Field | Meaning |
-| --- | --- |
-| `original_sequence` | Input promoter sequence |
-| `designed_sequence` | Designed candidate promoter sequence |
-| `target_tissue` | Requested target tissue |
-| `candidate_rank` | Rank within candidates for the same input promoter |
-| `score_root`, `score_stem`, `score_leaf`, `score_fruit` | Candidate tissue-associated heuristic scores |
-| `preserved_motifs` | Motifs protected by the package-native design route |
-| `num_mutations` | Number of point differences from the input sequence |
-| `passes_qc` | Quality-control flag when available |
-
-Typical use of the design output:
-
-1. Select candidates with high target-tissue score.
-2. Prefer candidates with a clear target-tissue margin over non-target tissues.
-3. Check that important motifs are preserved.
-4. Avoid candidates with unnecessarily high mutation burden.
-5. Use the selected `designed_sequence` entries for downstream manual review or experimental validation.
-
-The software prioritizes promoter candidates computationally. Final promoter activity should be validated experimentally.
-
-## Reproduce Manuscript Resources
-
-The small demo verifies installation and command behavior. Manuscript and supplementary figures are based on retained result tables.
-
-Regenerate the retained manuscript-facing result pack:
+### DNABERT inference
 
 ```bash
-make reproduce-results
+tpsgen predict-dnabert \
+  --input tomato_promoters.fasta \
+  --output outputs/dnabert_predictions.csv
 ```
 
-Outputs are written to:
-
-```text
-data/results/reproducible_legacy/
-```
-
-## Train A Compatible TransVAE Scoring Checkpoint
-
-The repository includes the TransVAE model architecture, training dataset loader and a lightweight training entry point for checkpoint-backed four-tissue scoring. This is provided so the model-backed scoring route is not just a standalone `.pth` file.
-
-Install model/training dependencies before using these routes:
-
-```bash
-pip install -e ".[training]"
-```
-
-Run a fast smoke test:
-
-```bash
-make train-transvae-smoke
-```
-
-Run the default training configuration:
-
-```bash
-PYTHONPATH=src python scripts/train_transvae.py \
-  --config configs/training_transvae.yaml
-```
-
-The generated checkpoint uses the same `TransVAEMLP` schema as the released
-Transformer-VAE scoring route. Use it for a reproducible local training run,
-or use the bundled paper-aligned checkpoint for the retained model results:
+### TransVAE scoring
 
 ```bash
 tpsgen predict-transvae \
-  --input examples/demo_input.fasta \
-  --checkpoint models/transvae/best_val_corr_model.pth \
-  --output outputs/transvae_predict.csv
+  --input tomato_promoters.fasta \
+  --output outputs/transvae_scores.csv
 ```
 
-Detailed training documentation is available in `docs/training.md`.
-
-## preGAN Training Smoke Test
-
-The repository includes the preGAN training components and a locally trained
-generator checkpoint. The smoke test remains available for checking mask
-semantics and the conditional generator/discriminator code path:
+To select another compatible checkpoint:
 
 ```bash
-make train-pregan-smoke
+tpsgen predict-transvae \
+  --input tomato_promoters.fasta \
+  --checkpoint models/transvae/full_length_joint_model.pth \
+  --output outputs/full_length_scores.csv
 ```
 
-This writes a temporary checkpoint under `tmp/` with metadata marking it as a
-training smoke-test artifact. To run the trained generator and score its
-candidates with TransVAE:
+### preGAN generation only
 
 ```bash
-tpsgen run-pregan \
+tpsgen pregan-generate \
   --input templates.fasta \
-  --checkpoint models/pregan/generator_checkpoint.pt \
-  --candidates 5 --seed 42 --output outputs/pregan_workflow
+  --checkpoint models/pregan/original_pregan_10000.pt \
+  --candidates 8 \
+  --seed 42 \
+  --output outputs/pregan_candidates.csv \
+  --fasta-output outputs/pregan_candidates.fasta
 ```
 
-## Supplementary Figures
-
-Submitted supplementary figures are retained under `docs/fig/`, and their
-source tables are retained under `data/results/reproducible_legacy/`. Use
-`make reproduce-results` to regenerate the manuscript-facing result pack.
-
-## Main Commands
-
-| Command | Purpose |
-| --- | --- |
-| `run` | Run the integrated validation, annotation, design, scoring and reporting workflow |
-| `copy-example` | Copy the bundled demonstration FASTA to a user-selected path |
-| `validate-input` | Validate FASTA records and sequence symbols |
-| `extract-promoters` | Extract strand-aware 165-bp promoter windows from tomato genome and GFF3 files |
-| `annotate` | Scan promoter sequences for configured motif hits |
-| `predict` | Generate root, stem, leaf and fruit-associated scores |
-| `design` | Generate motif-aware candidate promoters |
-| `report` | Build a compact JSON design summary |
-| `figures` | Export lightweight figures from result CSV files |
-| `model-figures` | Optional manuscript-resource reconstruction command |
-| `validate-models` | Report the availability of bundled model resources and their CLI routes |
-| `validate-dnabert` | Validate matched DNABERT sequence and attention resources |
-| `annotate-dnabert` | Run project DNABERT-derived motif post-processing |
-| `predict-dnabert` | Run bundled DNABERT inference on 165-bp tomato promoter FASTA |
-| `predict-transvae` | Run the bundled TransVAE four-tissue checkpoint adapter |
-| `pregan-generate` | Generate candidates from masked templates with a compatible preGAN checkpoint |
-| `run-pregan` | Run preGAN generation followed by TransVAE scoring |
-
-`annotate-dnabert` converts matched precomputed DNABERT sequence and attention
-arrays into motif summaries. It is distinct from `predict-dnabert`, which runs
-the bundled fine-tuned checkpoint on new 165-bp FASTA records.
-
-Validate a retained DNABERT resource pair before using it:
+### Package-native stage commands
 
 ```bash
-tpsgen validate-dnabert \
-  --dev-tsv data/raw/dnabert/dev.tsv \
-  --atten-npy data/raw/dnabert/atten.npy
+tpsgen annotate --input examples/demo_input.fasta --output outputs/motifs.csv
+tpsgen predict --input examples/demo_input.fasta --output outputs/native_scores.csv
+tpsgen design --input examples/demo_input.fasta --target fruit --candidates 3 --seed 42 --output outputs/native_designs.csv
+tpsgen report --input outputs/native_designs.csv --output outputs/native_report.json
 ```
 
-This checks row counts, reconstructed sequence length and class counts; it does
-not establish tomato species provenance.
+## Choosing A Target Tissue
 
-The retained TransVAE checkpoint is exposed for four-tissue scoring through
-`predict-transvae`; released candidate generation is provided by the
-package-native `design` command. TransVAE latent-space candidate generation is
-not exposed as a public command in this release.
+Supported targets are `root`, `stem`, `leaf` and `fruit`.
+
+The requested tissue must be the highest-scoring tissue before a candidate passes model-backed tissue-bias filtering. A positive `target_margin` means the target exceeds all three non-target scores.
+
+The default `tau` threshold is `0.7`. If no candidate reaches it, the default workflow may lower the effective threshold to the adaptive floor while retaining target-highest and margin requirements. Such candidates are labelled `adaptive_target_biased`/`target_biased`, not strict results.
+
+## Bundled Models
+
+| Module | Resource | Role |
+| --- | --- | --- |
+| DNABERT | `models/dnabert/pytorch_model.bin` | Fresh tomato 6-mer evidence inference |
+| preGAN | `models/pregan/original_pregan_10000.pt` | Conditional candidate generation |
+| preGAN expression predictor | `models/pregan_expression/165_mpra_expr_denselstm.pth` | Frozen fruit-associated training guidance |
+| TransVAE-MLP | `models/transvae/historical_compatible_best_val_corr.pth` | Default four-tissue scoring |
+| Full-length TransVAE-MLP | `models/transvae/full_length_joint_model.pth` | Corrected full-length development checkpoint |
+
+Checksums and metadata are recorded in [`models/weights_manifest.json`](models/weights_manifest.json). Run `tpsgen validate-models` before model-backed analysis.
+
+The default TransVAE scorer preserves the input convention required by its checkpoint. The separate full-length checkpoint uses all 165 positions and does not alias nucleotide A to padding. Results from these checkpoints should not be mixed.
+
+Checkpoint outputs are mapped to non-negative values with `softplus` before `tau` calculation. `tau` accepts only finite, non-negative values with a positive maximum.
+
+## Training
+
+Standard users do not need to retrain bundled models.
+
+### Train TransVAE
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+PYTHONPATH=src \
+python scripts/train_transvae.py \
+  --config configs/training_transvae.yaml \
+  --input-csv data/raw/transvae/paper_split/train.csv \
+  --validation-csv data/raw/transvae/paper_split/validation.csv \
+  --output-checkpoint models/transvae/new_joint_model.pth \
+  --metrics-json models/transvae/new_joint_metrics.json \
+  --epochs 40 \
+  --batch-size 128 \
+  --learning-rate 0.0003 \
+  --target-tissue fruit \
+  --specificity-mode label-gated \
+  --specificity-weight 0.3 \
+  --specificity-margin 0.2 \
+  --device cuda
+```
+
+### Train preGAN
+
+```bash
+CUDA_VISIBLE_DEVICES=0 \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+PYTHONPATH=src \
+python scripts/train_pregan.py \
+  --input-csv data/raw/pregan/paper_split/train.csv \
+  --output-checkpoint models/pregan/new_generator_10000.pt \
+  --metrics-json models/pregan/new_generator_10000.json \
+  --steps 10000 \
+  --batch-size 32 \
+  --critic-updates 5 \
+  --checkpoint-interval 100 \
+  --snapshot-dir models/pregan/new_snapshots_10000 \
+  --device cuda \
+  --expression-checkpoint models/pregan_expression/165_mpra_expr_denselstm.pth \
+  --expression-module-dir models/pregan_expression
+```
+
+See [`docs/training.md`](docs/training.md) and [`docs/tool_documentation.md`](docs/tool_documentation.md) for additional details.
+
+## Testing
+
+```bash
+PYTHONPATH=src python -m unittest discover -s tests -v
+```
+
+or:
+
+```bash
+make test
+```
+
+## Troubleshooting
+
+### A model cannot be found
+
+```bash
+tpsgen validate-models
+export TPSGEN_MODELS_DIR=/absolute/path/to/TPSGen/models
+```
+
+### Check CUDA
+
+```bash
+python - <<'PY'
+import torch
+print(torch.__version__)
+print(torch.cuda.is_available())
+print(torch.cuda.device_count())
+PY
+```
+
+### Input is rejected
+
+```bash
+tpsgen validate-input --input your_sequences.fasta
+```
+
+For model-backed routes, verify that every record is exactly 165 bp and contains only A/C/G/T. User-supplied preGAN templates may contain `M`.
+
+### No candidate passes `tau >= 0.7`
+
+This does not mean execution failed. Inspect `preferred_tissue`, `target_margin`, `tau`, `threshold_mode` and `specificity_level`. The adaptive route can return explicitly labelled target-biased candidates; `--strict-tau` disables that behavior.
 
 ## Repository Layout
 
 ```text
 TPSGen/
-├── src/tpsgen/   # package source and CLI
-├── examples/                       # runnable FASTA examples
-├── data/                           # curated data and retained result resources
-├── docs/                           # tool documentation and manuscript sources
-├── models/                         # bundled checkpoints and model resources
-├── scripts/                        # data and result reproduction scripts
-└── tests/                          # unit and regression tests
+|-- configs/       Training configuration
+|-- data/          Input tables and retained result resources
+|-- docs/          Manuscript, supplement and documentation
+|-- examples/      Bundled FASTA example
+|-- models/        DNABERT, preGAN and TransVAE resources
+|-- scripts/       Training and reproducibility entry points
+|-- src/tpsgen/    Installable Python package
+`-- tests/         Unit and integration tests
 ```
 
-Local command outputs are written to `outputs/` in the examples above. That
-directory is ignored by git and is not a canonical repository data location.
+## Reproducibility
+
+For each analysis, retain:
+
+- TPSGen version and complete command;
+- input FASTA and checksum;
+- selected backend names;
+- model checkpoint checksums;
+- random seed and candidate count;
+- requested and effective thresholds;
+- generated CSV/FASTA files and `manifest.json`.
 
 ## Documentation
 
-Detailed tool documentation:
-
-```text
-docs/tool_documentation.md
-docs/training.md
-```
-
-Manuscript sources:
-
-```text
-docs/application_note_submission.tex
-docs/application_note_supplement.tex
-docs/references.bib
-```
-
-## Data And Model Boundary
-
-Package-native commands run after installation without loading a checkpoint.
-The repository and release wheel also bundle the paper-aligned Transformer-VAE checkpoint
-and the preGAN expression-constraint resource:
-
-```text
-models/transvae/best_val_corr_model.pth
-models/pregan_expression/165_mpra_expr_denselstm.pth
-models/pregan_expression/SeqRegressionModel.py
-models/weights_manifest.json
-```
-
-The TransVAE route includes compatible training code in this repository. The
-preGAN route includes tested training components for mask-preserving conditional
-generation and uses the bundled expression-constraint resource internally during
-the smoke test. The bundled preGAN generator is runnable through the explicit
-generation commands, but it is not presented as an independently benchmarked or
-experimentally validated generator. DNABERT has both an explicit inference route
-and a separate post-processing route for precomputed attention inputs. These
-routes therefore have different reproduction boundaries.
-
-Large genomes, HDF5 corpora, BLAST databases and optional external resources are tracked through manifests rather than bundled into normal git history.
-
-See `docs/tool_documentation.md` for data, model and reproduction details.
+- [`docs/tool_documentation.md`](docs/tool_documentation.md): workflow and output definitions
+- [`docs/training.md`](docs/training.md): TransVAE training procedure
+- [`models/README.md`](models/README.md): bundled model inventory
+- [`models/weights_manifest.json`](models/weights_manifest.json): checksums and metadata
+- [`docs/application_note_submission.tex`](docs/application_note_submission.tex): Application Note
+- [`docs/application_note_supplement.tex`](docs/application_note_supplement.tex): supplementary methods
 
 ## Citation
 
-Citation metadata is provided in `CITATION.cff`. Please cite the Application Note and repository release when using TPSGen.
+Citation metadata are provided in [`CITATION.cff`](CITATION.cff). Cite TPSGen and the relevant DNABERT, preGAN and TransVAE methods when using model-backed routes.
 
 ## License
 
-The package code is released under the MIT license declared in `LICENSE` and
-`pyproject.toml`. Project data, checkpoints, derived resources and third-party
-attribution boundaries are documented in `RESOURCE_LICENSES.md` and
-`data/source_registry.tsv`.
+Software licensing is described in [`LICENSE`](LICENSE). Model and data-resource terms are documented in [`RESOURCE_LICENSES.md`](RESOURCE_LICENSES.md).

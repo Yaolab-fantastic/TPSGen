@@ -1,107 +1,54 @@
-# Training Guide
+# TransVAE Joint Training
 
-This document describes the repository training entry point for the TransVAE model-backed scoring route.
+The release training path matches the TPSGen model description: a Transformer variational autoencoder processes the complete 165 bp sequence and jointly optimizes reconstruction, KL-divergence, four-tissue prediction, and differentiable 3-mer objectives.
 
-The training code is intentionally lightweight and inspectable. It provides the model architecture, dataset reader, supervised objective and checkpoint writer used to train a checkpoint compatible with:
-
-```bash
-tpsgen predict-transvae
-```
-
-## Files
-
-| File | Purpose |
-| --- | --- |
-| `src/tpsgen/legacy/transvae_tomato.py` | TransVAE model architecture and scoring adapter |
-| `src/tpsgen/training/transvae.py` | Training dataset, config loader and training loop |
-| `scripts/train_transvae.py` | Command-line training wrapper |
-| `configs/training_transvae.yaml` | Default training configuration |
-| `data/raw/transvae/training_set.csv` | Repository training table used by the default config |
-
-## Training Data Format
-
-The default training table uses one promoter sequence column and four tissue-associated target columns:
-
-| Column | Meaning |
-| --- | --- |
-| `realB` | 165-bp promoter sequence containing only `A/C/G/T` |
-| `expr_tissue_1` | Root-associated training target |
-| `expr_tissue_2` | Stem-associated training target |
-| `expr_tissue_3` | Leaf-associated training target |
-| `expr_tissue_4` | Fruit-associated training target |
-
-Rows with non-165-bp sequences, ambiguous bases or missing numeric targets are skipped by the training dataset loader.
-
-## Full Training Command
+## Environment
 
 ```bash
-PYTHONPATH=src python scripts/train_transvae.py \
-  --config configs/training_transvae.yaml
+cd /data/zhoujie/Paper/github/TPSGen
+conda activate py39
+python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
 ```
 
-By default this writes:
+CUDA availability must print `True` for GPU training.
 
-```text
-models/transvae/trained_transvae_model.pth
-models/transvae/trained_transvae_metrics.json
-```
+## Fixed Release Split
 
-The training script uses the same `TransVAEMLP` architecture and strict state
-dictionary schema as the released scoring route. It trains the four-tissue
-supervised scoring head through the Transformer-VAE sequence representation;
-it is a reproducibility entry point, not a replacement for the retained
-paper checkpoint or a hyperparameter benchmark. The bundled paper-aligned
-checkpoint is intended for routine `predict-transvae` use.
+`data/raw/transvae/paper_split/manifest.json` defines the historical seed-42
+split used by the released training workflow. A differently constructed
+split requires retraining and must not be substituted beneath an existing
+checkpoint.
 
-The legacy checkpoint that used a truncated encoder input and A-as-padding was
-removed from the release. Train `models/transvae/full_length_joint_model.pth`
-with the default configuration before enabling checkpoint-backed scoring.
+| File | Records | Use |
+|---|---:|---|
+| `train.csv` | 11,257 | model fitting |
+| `validation.csv` | 1,407 | validation |
+| `test.csv` | 1,407 | final evaluation |
 
-## Smoke Test
+The manifest records the source dataset checksum and each split-file checksum. Release evaluation must use these fixed files without reshuffling.
 
-For a fast check that the training and loading path works:
+## Training Command
 
 ```bash
-make train-transvae-smoke
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+PYTHONPATH=src \
+python scripts/train_transvae.py \
+  --input-csv data/raw/transvae/paper_split/train.csv \
+  --output-checkpoint models/transvae/full_length_joint_model.pth \
+  --metrics-json models/transvae/full_length_joint_metrics.json \
+  --epochs 20 \
+  --device cuda
 ```
 
-This trains on eight rows for one epoch and writes a temporary legacy training
-checkpoint under `tmp/`; it does not claim compatibility with the released
-Transformer-VAE checkpoint.
+The released checkpoint was trained for 20 epochs on the fixed 11,257-record training file. Its SHA-256 is `835f9e5cb7c1b184a19c4db9cb8d5652adb5f6e1eaf73a839929e00327f4aa03`.
 
-## Training Objective
+The best epoch was selected through an internal deterministic subset of the training file. The separately versioned validation and test files are not used for parameter updates.
 
-The paper-compatible training loop optimizes:
-
-```text
-total loss = reconstruction + beta * KL + prediction + differentiable 3-mer
-```
-
-The predictor learns four continuous tissue-associated scores while the decoder
-reconstructs the full 165-bp input. The 3-mer term compares expected soft
-3-mer distributions and backpropagates through the decoder.
-
-## Notes
-
-No TransVAE checkpoint is bundled until the corrected full-length joint model
-has been trained and validated. The training script writes explicit objective
-and input-policy metadata for that validation step.
-
-## preGAN Smoke Training
-
-preGAN training components are implemented separately from the TransVAE
-training route. They support the retained masked-promoter format in which
-`realA` contains fixed bases plus `M` symbols for mutable positions, `realB`
-contains the completed promoter sequence and `expr` contains the scalar target.
-
-Run the training-plumbing smoke test with:
+## Release Checks
 
 ```bash
-make train-pregan-smoke
+tpsgen validate-models
+PYTHONPATH=src pytest -q
 ```
 
-This uses `data/raw/pregan_expression/pregan_smoke.csv` and the bundled
-expression-constraint scorer to verify fixed-base preservation, WGAN-GP loss
-wiring and frozen expression-constraint behavior. The generated temporary
-checkpoint is not a validated preGAN generator and should not be used for
-promoter design inference.
+Keep the architecture version, tokenizer rules, sequence length, loss weights, seed, split hashes, epoch count, checkpoint checksum, and record-level evaluation outputs with every release.

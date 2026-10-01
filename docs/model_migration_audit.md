@@ -84,18 +84,17 @@ named `z` in the wrapper: it was actually
 representation was passed to the expression MLP. The predictor did not receive
 the sampled latent variable.
 
-Using the recovered wrapper behavior, source-defined DNA mapping, the first 164
-positions of each 165-bp sequence and the retained `token != 0` mask, the
-checkpoint reproduces the best validation-log values on `val.csv` (3,703 rows).
+The historical wrapper audit used the source-defined DNA mapping and its
+retained validation table to document the provenance of the old evaluation
+artifact. That artifact is not a released scoring checkpoint.
 Computed correlations are 0.780106, 0.823665, 0.801869 and 0.792406; these match
 the rounded epoch-47 log values 0.7801, 0.8237, 0.8019 and 0.7924. The separate
 `validation_set.csv` contains 3,000 rows and is not the validation table used for
 this retained checkpoint.
 
-This establishes a checkpoint/data/code pairing for reconstruction. It does not
-remove the methodological limitations of using token 0 for both adenine and
-padding, nor does it make the retained validation split an independent external
-benchmark.
+The current release does not ship that historical checkpoint or its truncated
+input path. The active training and scoring implementation uses complete
+165-bp inputs with nucleotide positions as valid attention keys.
 
 ### Design-path verification
 
@@ -194,10 +193,11 @@ an explicit empty-result record rather than nonsignificant motifs.
 Using `vision/dev.tsv` (10,222 rows), `result/6/atten.npy`, `window_size=24`,
 `min_len=5`, adjusted-p-value cutoff 0.005 and `min_n_motif=3`, the corrected
 adapter extracts 8,096 exact motifs, retains 787 after enrichment testing,
-produces 77 merged motif groups and retains 53 motif records after 24-bp
-windowing and minimum-instance filtering. The regenerated repository table
-reports the top retained motifs as ACTATA (127), CTCAAA (126), TAATTT (96),
-ACTTAT (95) and TTAAA (90). Older retained `6-2` and `6-3` summary files are
+produces 31 merged motif groups and retains 27 motif records after 24-bp
+windowing and minimum-instance filtering. These counts match the 27 motif
+files retained under the original `motif/result/6` directory. The regenerated
+repository table reports the top retained motifs as CAAAA (316), CTATT (239),
+ATTTT (188), TTAAA (184) and TTTAT (121). Older retained `6-2` and `6-3` summary files are
 byte-identical frequency-style retained copies and must not be described as
 independent validation runs or as the current adapter output.
 

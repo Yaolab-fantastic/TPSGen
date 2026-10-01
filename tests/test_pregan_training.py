@@ -17,6 +17,7 @@ from tpsgen.training.pregan import (
     freeze_predictor,
     generator_loss,
     run_pregan_smoke_training,
+    run_pregan_training,
     sample_noise,
 )
 
@@ -28,6 +29,19 @@ class TinyPredictor(nn.Module):
 
     def forward(self, sequence: torch.Tensor) -> torch.Tensor:
         return sequence.mean(dim=(1, 2), keepdim=False).unsqueeze(1) * self.weight
+
+
+class TinyRecurrentPredictor(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.normalization = nn.BatchNorm1d(4)
+        self.recurrent = nn.LSTM(input_size=4, hidden_size=3, batch_first=True)
+        self.output = nn.Linear(3, 1)
+
+    def forward(self, sequence: torch.Tensor) -> torch.Tensor:
+        features = self.normalization(sequence).transpose(1, 2)
+        recurrent, _ = self.recurrent(features)
+        return self.output(recurrent[:, -1])
 
 
 class TestPreGANTrainingComponents(unittest.TestCase):
@@ -107,6 +121,16 @@ class TestPreGANTrainingComponents(unittest.TestCase):
         self.assertGreater(generator_grad, 0.0)
         self.assertFalse(any(parameter.requires_grad for parameter in predictor.parameters()))
 
+    def test_frozen_recurrent_predictor_allows_input_gradients(self) -> None:
+        predictor = freeze_predictor(TinyRecurrentPredictor())
+        sequence = torch.randn(2, 4, 15, requires_grad=True)
+        predictor(sequence).sum().backward()
+
+        self.assertIsNotNone(sequence.grad)
+        self.assertTrue(predictor.recurrent.training)
+        self.assertFalse(predictor.normalization.training)
+        self.assertFalse(any(parameter.requires_grad for parameter in predictor.parameters()))
+
     def test_smoke_training_writes_metadata_checkpoint(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -118,14 +142,26 @@ class TestPreGANTrainingComponents(unittest.TestCase):
                 batch_size=2,
                 noise_channels=3,
                 hidden_channels=8,
+                critic_updates=1,
+                checkpoint_interval=1,
+                snapshot_dir=str(Path(temp_dir) / "snapshots"),
             )
-            metrics = run_pregan_smoke_training(config, predictor=TinyPredictor())
+            metrics = run_pregan_training(config, predictor=TinyPredictor())
             checkpoint = torch.load(metrics["checkpoint"], map_location="cpu", weights_only=False)
+            snapshot_checkpoint_exists = (
+                Path(temp_dir) / "snapshots" / "pregan_iteration_00001.pt"
+            ).is_file()
+            snapshot_sequences_exist = (
+                Path(temp_dir) / "snapshots" / "pregan_iteration_00001_sequences.csv"
+            ).is_file()
 
         self.assertEqual(metrics["num_records"], 4)
-        self.assertIn("training-smoke only", metrics["release_boundary"])
+        self.assertEqual(metrics["critic_updates_per_generator"], 1)
+        self.assertEqual(metrics["total_critic_updates"], 1)
         self.assertIn("generator_state_dict", checkpoint)
-        self.assertIn("not a validated generation model", checkpoint["note"])
+        self.assertEqual(checkpoint["config"]["checkpoint_interval"], 1)
+        self.assertTrue(snapshot_checkpoint_exists)
+        self.assertTrue(snapshot_sequences_exist)
 
 
 if __name__ == "__main__":

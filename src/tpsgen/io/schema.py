@@ -7,7 +7,7 @@ from typing import Iterable
 ALLOWED_BASES = set("ACGTNM")
 
 
-@dataclass(slots=True)
+@dataclass
 class SequenceRecord:
     sequence_id: str
     sequence: str
@@ -16,7 +16,7 @@ class SequenceRecord:
         return asdict(self)
 
 
-@dataclass(slots=True)
+@dataclass
 class MotifHit:
     sequence_id: str
     motif: str
@@ -28,7 +28,7 @@ class MotifHit:
         return asdict(self)
 
 
-@dataclass(slots=True)
+@dataclass
 class PredictionResult:
     sequence_id: str
     sequence: str
@@ -42,7 +42,7 @@ class PredictionResult:
         return asdict(self)
 
 
-@dataclass(slots=True)
+@dataclass
 class DesignResult:
     sequence_id: str
     target_tissue: str
@@ -62,7 +62,7 @@ class DesignResult:
         return asdict(self)
 
 
-@dataclass(slots=True)
+@dataclass
 class LegacyPredictionResult:
     sequence_id: str
     sequence: str
@@ -74,7 +74,7 @@ class LegacyPredictionResult:
         return asdict(self)
 
 
-@dataclass(slots=True)
+@dataclass
 class LegacyMotifRecord:
     motif: str
     num_instances: int
@@ -94,7 +94,7 @@ class LegacyMotifRecord:
         }
 
 
-@dataclass(slots=True)
+@dataclass
 class LegacyLabeledSequence:
     sequence_id: int
     label: int

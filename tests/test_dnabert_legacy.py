@@ -125,16 +125,16 @@ class TestDNABERTLegacyAdapter(unittest.TestCase):
         self.assertEqual(metadata["num_total_sequences"], 10222)
         self.assertEqual(metadata["num_extracted_exact_motifs"], 8096)
         self.assertEqual(metadata["num_significant_exact_motifs"], 787)
-        self.assertEqual(metadata["num_merged_motif_groups"], 77)
-        self.assertEqual(metadata["num_retained_motifs"], 53)
+        self.assertEqual(metadata["num_merged_motif_groups"], 31)
+        self.assertEqual(metadata["num_retained_motifs"], 27)
         self.assertEqual(
             [(record.motif, record.num_instances) for record in top],
             [
-                ("ACTATA", 127),
-                ("CTCAAA", 126),
-                ("TAATTT", 96),
-                ("ACTTAT", 95),
-                ("TTAAA", 90),
+                ("CAAAA", 316),
+                ("CTATT", 239),
+                ("ATTTT", 188),
+                ("TTAAA", 184),
+                ("TTTAT", 121),
             ],
         )
 

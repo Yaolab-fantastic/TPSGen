@@ -1,6 +1,8 @@
 stage	path	source	note
 external	data/external/external_resources.tsv	external_resource_manifest	Optional large raw/model artifacts intentionally not copied into git.
-models	models/transvae/best_val_corr_model.pth	project training workflow	Bundled lightweight checkpoint for the explicit TransVAE scoring command.
+models	models/transvae/historical_compatible_best_val_corr.pth	project training workflow	Default historical-compatible checkpoint for TransVAE scoring.
+models	models/transvae/full_length_joint_model.pth	project training workflow	Corrected full-length development checkpoint; not the source of historical performance metrics.
+models	models/pregan/original_pregan_10000.pt	project training workflow	Bundled original-architecture preGAN generator trained for 10,000 generator iterations.
 models	models/pregan_expression/165_mpra_expr_denselstm.pth	project training workflow	Bundled expression-constraint checkpoint used internally by the preGAN training smoke test.
 models	models/pregan_expression/SeqRegressionModel.py	project model source	Model class definition required to load the bundled preGAN expression-constraint checkpoint.
 raw	data/raw/dnabert/dev.tsv	project DNABERT-derived motif workflow	DNABERT sequence table used for attention-based motif processing.

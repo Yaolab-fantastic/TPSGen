@@ -14,7 +14,7 @@ DEFAULT_MOTIFS = [
 TISSUE_CHOICES = ("root", "stem", "leaf", "fruit")
 
 
-@dataclass(slots=True)
+@dataclass
 class AppConfig:
     canonical_length: int = 165
     motifs: list[str] = field(default_factory=lambda: list(DEFAULT_MOTIFS))

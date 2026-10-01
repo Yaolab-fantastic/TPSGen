@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 import csv
+import math
 from pathlib import Path
 
 from tpsgen.io.fasta import read_fasta
@@ -18,6 +19,21 @@ class TestIntegratedWorkflow(unittest.TestCase):
         tau, status = _compute_tau({"root": 0.0, "stem": 0.0, "leaf": 0.0, "fruit": 0.0})
         self.assertIsNone(tau)
         self.assertEqual(status, "maximum_score_must_be_positive")
+
+    def test_tau_rejects_non_finite_scores(self) -> None:
+        tau, status = _compute_tau({"root": 1.0, "stem": math.nan, "leaf": 0.5, "fruit": 2.0})
+        self.assertIsNone(tau)
+        self.assertEqual(status, "scores_must_be_finite")
+
+    def test_tau_inverse_transforms_log1p_expression_scores(self) -> None:
+        linear = {"root": 1.0, "stem": 2.0, "leaf": 3.0, "fruit": 10.0}
+        transformed = {key: math.log1p(value) for key, value in linear.items()}
+        linear_tau, linear_status = _compute_tau(linear)
+        transformed_tau, transformed_status = _compute_tau(transformed, input_scale="log1p")
+        self.assertEqual(linear_status, "valid")
+        self.assertEqual(transformed_status, "valid")
+        self.assertEqual(transformed_tau, linear_tau)
+
     def test_run_with_dnabert_records_fresh_evidence(self) -> None:
         repo_root = Path(__file__).resolve().parents[1]
         records = read_fasta(repo_root / "examples" / "demo_input.fasta")
