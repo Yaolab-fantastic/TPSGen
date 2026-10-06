@@ -125,7 +125,7 @@ def run_pregan_workflow(
             row["passes_qc"]
             and row["passes_retained_positions"]
             and score["preferred_tissue"] == target_tissue
-            and float(score["target_margin"]) >= min_margin
+            and float(score["target_margin"]) > min_margin
             and score["tau"] is not None
             and float(score["tau"]) >= min_tau
         )
@@ -165,7 +165,7 @@ def run_pregan_workflow(
             retained_matches = sum(str(design["sequence"])[index] == template[index] for index in retained)
             passes = bool(design["passes_qc"] and retained_matches == len(retained)
                           and max(values, key=values.get) == target_tissue
-                          and margin >= min_margin and tau is not None and tau >= min_tau)
+                          and margin > min_margin and tau is not None and tau >= min_tau)
             fallback_rows.append({"sequence_id": record.sequence_id, "candidate_rank": candidate_rank,
                 "sequence": design["sequence"], "candidate_id": f"{record.sequence_id}__constrained_{candidate_rank}",
                 "passes_qc": design["passes_qc"], "target_tissue": target_tissue,
@@ -195,7 +195,7 @@ def run_pregan_workflow(
                 if row.get("passes_qc")
                 and row.get("passes_retained_positions")
                 and row.get("preferred_tissue") == target_tissue
-                and float(row.get("target_margin", float("-inf"))) >= min_margin
+                and float(row.get("target_margin", float("-inf"))) > min_margin
                 and row.get("tau") is not None
             ]
             if target_biased:

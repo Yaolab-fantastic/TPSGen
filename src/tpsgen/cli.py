@@ -264,35 +264,40 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "validate-models":
         from tpsgen.resources import repository_root
 
+        def optional_model(relative_path: str):
+            try:
+                return find_model(relative_path)
+            except FileNotFoundError:
+                return None
+
         repo_root = repository_root()
-        model_root = repo_root / "models"
-        transvae = model_root / "transvae" / "historical_compatible_best_val_corr.pth"
-        dnabert = model_root / "dnabert" / "pytorch_model.bin"
-        pregan_generator = model_root / "pregan" / "original_pregan_10000.pt"
-        pregan = model_root / "pregan_expression" / "165_mpra_expr_denselstm.pth"
+        transvae = optional_model("transvae/historical_compatible_best_val_corr.pth")
+        dnabert = optional_model("dnabert/pytorch_model.bin")
+        pregan_generator = optional_model("pregan/original_pregan_10000.pt")
+        pregan = optional_model("pregan_expression/165_mpra_expr_denselstm.pth")
         report = {
             "transvae": {
-                "checkpoint": str(transvae),
-                "available_for_runtime_scoring": transvae.exists(),
-                "route": "predict-transvae" if transvae.exists() else None,
+                "checkpoint": str(transvae) if transvae else None,
+                "available_for_runtime_scoring": transvae is not None,
+                "route": "predict-transvae" if transvae else None,
             },
             "dnabert": {
-                "fine_tuned_checkpoint_present": dnabert.exists(),
+                "fine_tuned_checkpoint_present": dnabert is not None,
                 "precomputed_attention_present": (
                     repo_root / "data" / "raw" / "dnabert" / "atten.npy"
                 ).exists(),
-                "available_for_arbitrary_fasta": dnabert.exists(),
-                "route": "predict-dnabert" if dnabert.exists() else None,
+                "available_for_arbitrary_fasta": dnabert is not None,
+                "route": "predict-dnabert" if dnabert else None,
                 "reason": "The retained attention array is separate historical data; predict-dnabert runs fresh inference when the bundled checkpoint is present.",
             },
             "pregan": {
-                "generator_checkpoint_present": pregan_generator.exists(),
-                "expression_constraint_checkpoint_present": pregan.exists(),
-                "available_for_arbitrary_fasta_generation": pregan_generator.exists(),
-                "route": "pregan-generate" if pregan_generator.exists() else None,
-                "checkpoint": str(pregan_generator),
-                "training_records": 4080 if pregan_generator.exists() else None,
-                "training_steps": 10000 if pregan_generator.exists() else None,
+                "generator_checkpoint_present": pregan_generator is not None,
+                "expression_constraint_checkpoint_present": pregan is not None,
+                "available_for_arbitrary_fasta_generation": pregan_generator is not None,
+                "route": "pregan-generate" if pregan_generator else None,
+                "checkpoint": str(pregan_generator) if pregan_generator else None,
+                "training_records": 4080 if pregan_generator else None,
+                "training_steps": 10000 if pregan_generator else None,
                 "reason": "Checkpoint is available for computational generation; external biological validation remains required.",
             },
         }

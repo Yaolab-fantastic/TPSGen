@@ -3,16 +3,7 @@ from __future__ import annotations
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.nn import init
-from torch.utils.data import DataLoader
-from .pregan_original_data import LoadData
 import torch.nn.functional as F
-from .pregan_original_tensor2seq import save_sequence, tensor2seq, reserve_percentage
-from .pregan_original_transfer_fasta import csv2fasta
-from . import pregan_original_utils as utils
-import matplotlib
-
-matplotlib.use('Agg')
 
 import os
 
@@ -212,6 +203,9 @@ class WGAN():
 
 def main():
     import os
+    from torch.utils.data import DataLoader
+    from .pregan_original_data import LoadData
+    from . import pregan_original_utils as utils
 
     data_name = 'merged_result'
     seqL = 165

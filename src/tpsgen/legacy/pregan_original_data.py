@@ -1,6 +1,5 @@
 from torch.utils.data import ConcatDataset, DataLoader
 import numpy as np
-import torchvision.transforms as transforms
 from torch import squeeze
 import pandas as pd
 import torch
@@ -41,7 +40,8 @@ class LoadData(Dataset):
             self.expr.append(expr[i])  # 保存 expr 值
 
     def __getitem__(self, item):
-        in_seq, label_seq = transforms.ToTensor()(self.input_seq[item]), transforms.ToTensor()(self.storage[item])
+        in_seq = torch.from_numpy(self.input_seq[item]).unsqueeze(0)
+        label_seq = torch.from_numpy(self.storage[item]).unsqueeze(0)
         expr_value = self.expr[item]  # 获取 expr 值
 
         if len(self.gpu_ids) > 0:
